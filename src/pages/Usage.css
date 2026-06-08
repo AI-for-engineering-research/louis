@@ -105,13 +105,99 @@
 @media (max-width: 768px) {
   .usage h1 {
     font-size: 32px;
+    margin-bottom: 16px;
+  }
+
+  .intro {
+    font-size: 16px;
+    padding: 20px;
   }
 
   .log-entry {
     padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .log-entry h3 {
+    font-size: 22px;
+    margin-bottom: 16px;
   }
 
   .entry-section h4 {
     font-size: 18px;
+  }
+
+  .entry-section p {
+    font-size: 15px;
+  }
+
+  .entry-section ul {
+    font-size: 15px;
+  }
+
+  .log-stats {
+    padding: 18px;
+  }
+
+  .log-stats h3 {
+    font-size: 18px;
+  }
+
+  .log-stats p {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .usage {
+    max-width: 100%;
+  }
+
+  .usage h1 {
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+
+  .intro {
+    font-size: 14px;
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+
+  .log-entry {
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+  }
+
+  .log-entry h3 {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .entry-section h4 {
+    font-size: 16px;
+  }
+
+  .entry-section p {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .entry-section ul {
+    font-size: 14px;
+    margin-left: 16px;
+  }
+
+  .log-stats {
+    padding: 16px;
+  }
+
+  .log-stats h3 {
+    font-size: 16px;
+  }
+
+  .log-stats p {
+    font-size: 14px;
   }
 }

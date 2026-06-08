@@ -43,8 +43,48 @@
 }
 
 .project-content p {
-  font-size: 16px;
-  line-height: 1.7;
+  font-size: 18px;
+  line-height: 1.8;
   color: rgba(255, 255, 255, 0.95);
   font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .project-image {
+    height: 200px;
+  }
+
+  .project-content {
+    padding: 20px;
+  }
+
+  .project-content h3 {
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+
+  .project-content p {
+    font-size: 16px;
+    line-height: 1.7;
+  }
+}
+
+@media (max-width: 480px) {
+  .project-image {
+    height: 150px;
+  }
+
+  .project-content {
+    padding: 16px;
+  }
+
+  .project-content h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  .project-content p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
 }
