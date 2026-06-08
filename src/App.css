@@ -17,8 +17,8 @@
   min-height: 100vh;
   background-size: cover;
   background-position: center;
-  background-attachment: fixed;
   animation: backgroundShift 90s ease-in-out infinite;
+  will-change: background-image;
 }
 
 .navbar {
