@@ -4,7 +4,7 @@ function ContrailGallery() {
   return (
     <section className="contrail-gallery">
       <div className="gallery-container">
-        <h2>Contrail Evolution</h2>
+        <h2>A mental model of contrail evolution</h2>
 
         <div className="gallery-grid">
           <div className="gallery-item">
@@ -19,7 +19,7 @@ function ContrailGallery() {
             <div className="gallery-image">
               <img src="/louis/medium-contrail.jpg" alt="Medium contrail" />
             </div>
-            <h3>Medium</h3>
+            <h3>Mature</h3>
             <p>Transitional stage - spreading and beginning to merge with ambient clouds</p>
           </div>
 
@@ -27,7 +27,7 @@ function ContrailGallery() {
             <div className="gallery-image">
               <img src="/louis/old-contrail.jpg" alt="Young contrail" />
             </div>
-            <h3>Mature</h3>
+            <h3>Aged</h3>
             <p>Aged contrail - evolved into cirrus-like structures, visually indistinguishable from natural clouds</p>
           </div>
         </div>
