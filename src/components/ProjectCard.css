@@ -7,6 +7,7 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   transform: translateZ(0);
+  cursor: pointer;
 }
 
 .project-card:hover {
