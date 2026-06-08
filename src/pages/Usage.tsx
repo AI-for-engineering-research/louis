@@ -23,7 +23,7 @@ function Usage() {
               <li>Built navigation between Home and AI Usage Log pages</li>
             </ul>
             <p><strong>AI Assistance:</strong> Claude Haiku 4.5 — consulting on architecture, asking clarifying questions, reducing ambiguity in requirements</p>
-            <p><strong>Value:</strong> Saved ~2-3 hours of boilerplate setup and design decisions by having a structured conversation upfront</p>
+            <p><strong>Comments:</strong> Overall worked well with some clarification needed multiple times on features that did not work. .js / .tsx confusion leading to out of sync text took a few tries for the model to figure out. Lots of performance issues when adding the transparent text + rotating background, Claude could not figure that out so we dropped it for now.</p>
           </div>
         </div>
       </div>
