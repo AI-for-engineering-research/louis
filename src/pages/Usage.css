@@ -1,0 +1,99 @@
+.usage {
+  max-width: 800px;
+}
+
+.usage h1 {
+  font-size: 32px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.intro {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #666;
+  margin-bottom: 40px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.log-entry {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+}
+
+.log-entry h3 {
+  font-size: 22px;
+  color: #333;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #0066cc;
+  padding-bottom: 10px;
+}
+
+.entry-section {
+  margin-bottom: 20px;
+}
+
+.entry-section h4 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.entry-section p {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.entry-section ul {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.8;
+  margin-left: 20px;
+  margin-bottom: 10px;
+}
+
+.entry-section li {
+  margin-bottom: 8px;
+}
+
+.log-stats {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid #0066cc;
+}
+
+.log-stats h3 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.log-stats p {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.8;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .usage h1 {
+    font-size: 24px;
+  }
+
+  .log-entry {
+    padding: 20px;
+  }
+
+  .entry-section h4 {
+    font-size: 16px;
+  }
+}

@@ -1,0 +1,54 @@
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+}
+
+.bio {
+  background: white;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.bio h1 {
+  font-size: 32px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.bio p {
+  font-size: 18px;
+  line-height: 1.6;
+  color: #666;
+}
+
+.projects h2 {
+  font-size: 28px;
+  margin-bottom: 30px;
+  color: #333;
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 30px;
+}
+
+@media (max-width: 768px) {
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bio {
+    padding: 20px;
+  }
+
+  .bio h1 {
+    font-size: 24px;
+  }
+
+  .bio p {
+    font-size: 16px;
+  }
+}
