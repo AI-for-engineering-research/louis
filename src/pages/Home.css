@@ -5,13 +5,11 @@
 }
 
 .bio {
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.4);
   padding: 40px;
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  transform: translateZ(0);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: none;
 }
 
 .bio h1 {
