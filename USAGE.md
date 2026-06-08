@@ -21,10 +21,10 @@
 5. ✅ CONTEXT.md documenting project scope and structure
 
 **Next steps for user**:
-1. **Enable GitHub Pages** (required for deploy):
-   - Go to https://github.com/AI-for-engineering-research/louis/settings/pages
-   - Set **Source**: GitHub Actions, **Branch**: main
-   - Re-run the GitHub Actions workflow
+1. **Enable GitHub Pages** (requires org admin):
+   - Ask the org admin (or whoever set up the class's working GitHub Pages example) to enable Pages for this repo
+   - Configure it to build from GitHub Actions
+   - Once enabled, the workflow will auto-deploy on next push
    - Site will be live at: https://AI-for-engineering-research.github.io/louis/ (~2 min after enabling)
 
 2. **Replace placeholder assets**:
