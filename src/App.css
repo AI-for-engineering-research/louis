@@ -1,24 +1,11 @@
-@keyframes backgroundShift {
-  0% { background-image: url('/louis/sky_contrail_flyer_jets_blue_flight_movements_aircraft_clouds-623084.jpg'); opacity: 1; }
-  30% { background-image: url('/louis/sky_contrail_flyer_jets_blue_flight_movements_aircraft_clouds-623084.jpg'); opacity: 1; }
-  33% { background-image: url('/louis/wing-cloud-sky-sunlight-wind-atmosphere-623084-pxhere.com.jpg'); opacity: 0.7; }
-  36% { background-image: url('/louis/wing-cloud-sky-sunlight-wind-atmosphere-623084-pxhere.com.jpg'); opacity: 1; }
-  63% { background-image: url('/louis/wing-cloud-sky-sunlight-wind-atmosphere-623084-pxhere.com.jpg'); opacity: 1; }
-  66% { background-image: url('/louis/wing-sky-airplane-aircraft-line-vehicle-971128-pxhere.com.jpg'); opacity: 0.7; }
-  69% { background-image: url('/louis/wing-sky-airplane-aircraft-line-vehicle-971128-pxhere.com.jpg'); opacity: 1; }
-  97% { background-image: url('/louis/wing-sky-airplane-aircraft-line-vehicle-971128-pxhere.com.jpg'); opacity: 1; }
-  99% { background-image: url('/louis/sky_contrail_flyer_jets_blue_flight_movements_aircraft_clouds-623084.jpg'); opacity: 0.7; }
-  100% { background-image: url('/louis/sky_contrail_flyer_jets_blue_flight_movements_aircraft_clouds-623084.jpg'); opacity: 1; }
-}
-
 .app {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background-image: url('/louis/sky_contrail_flyer_jets_blue_flight_movements_aircraft_clouds-623084.jpg');
   background-size: cover;
   background-position: center;
-  animation: backgroundShift 90s ease-in-out infinite;
-  will-change: background-image;
+  background-attachment: scroll;
 }
 
 .navbar {

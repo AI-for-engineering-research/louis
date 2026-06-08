@@ -5,8 +5,8 @@
 }
 
 .bio {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(5px);
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(2px);
   padding: 40px;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
