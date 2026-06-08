@@ -7,7 +7,7 @@ function Home() {
       <section className="bio">
         <h1>Welcome</h1>
         <p>
-          Louis is a researcher at MIT's Aeronautics and Astronautics lab
+          Louis is a researcher at MIT's Laboratory for Aviation and the Environment
           investigating the climate impact of aircraft contrails. His work
           combines satellite imagery analysis with physics-based contrail
           modeling to better understand aviation's climate footprint.
