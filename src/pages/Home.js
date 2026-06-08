@@ -1,0 +1,7 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import ProjectCard from '../components/ProjectCard';
+import './Home.css';
+function Home() {
+    return (_jsxs("div", { className: "home", children: [_jsxs("section", { className: "bio", children: [_jsx("h1", { children: "Welcome" }), _jsx("p", { children: "Louis is a researcher at MIT's Aeronautics and Astronautics lab investigating the climate impact of aircraft contrails. His work combines satellite imagery analysis with physics-based contrail modeling to better understand aviation's climate footprint." })] }), _jsxs("section", { className: "projects", children: [_jsx("h2", { children: "Projects" }), _jsxs("div", { className: "projects-grid", children: [_jsx(ProjectCard, { title: "Satellite Imagery vs. Synthetic Contrails", description: "Comparison of real satellite imagery of contrails with synthetic imagery computed from contrail modeling. This project explores how well physics-based models capture the appearance of contrails as seen from space.", imagePath: "/louis/project1-placeholder.gif" }), _jsx(ProjectCard, { title: "APCEMM Contrail Model", description: "Visualization and analysis of the APCEMM (Aircraft Plume Chemistry Emissions and Microphysics Model) contrail simulation. Includes 2D cross-sections showing contrail dynamics and simulation mechanics.", imagePath: "/louis/project2-placeholder.gif" })] })] })] }));
+}
+export default Home;
