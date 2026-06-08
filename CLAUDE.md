@@ -12,10 +12,26 @@ This is a **greenfield repository**. As of this writing it contains only `README
 
 ## Language & tooling
 
-The `.gitignore` is the standard GitHub **Python** template, so Python is the intended language. No dependency manager has been chosen yet — when adding one, pick a single approach (e.g. `uv`, `poetry`, `pip` + `requirements.txt`) and record the install/run/test commands here so future sessions don't have to rediscover them.
+**Frontend**: TypeScript, React, Vite. Builds to GitHub Pages at https://AI-for-engineering-research.github.io/louis/
 
-When you establish project structure, update this file with:
-- How to install dependencies and set up the environment
-- How to run the code / experiments
-- How to run the test suite, and how to run a single test
-- The high-level architecture once more than a couple of modules exist
+### Setup & development
+```bash
+npm install          # Install dependencies
+npm run dev          # Start dev server (http://localhost:5173)
+npm run build        # Build for production
+npm run preview      # Preview production build locally
+```
+
+### Deployment
+Automatic via GitHub Actions on push to `main`. Workflow defined in `.github/workflows/deploy.yml`.
+
+### Assets
+- Project showcases use animated GIFs/diagrams stored in `public/`
+- Placeholders in place; swap in actual `.gif` files when ready
+
+### Project structure
+- `src/pages/` — Page components (Home, Usage log)
+- `src/components/` — Reusable components (ProjectCard)
+- `src/App.tsx` — Main app with simple nav routing
+- `public/` — Static assets (GIFs, images)
+- `vite.config.ts` — Configured with `/louis/` base path for org pages
