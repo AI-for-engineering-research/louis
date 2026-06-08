@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import ProjectCard from '../components/ProjectCard'
 import ProjectModal from '../components/ProjectModal'
+import ContrailGallery from '../components/ContrailGallery'
 import './Home.css'
 
 interface Project {
@@ -39,6 +40,8 @@ function Home() {
           modeling to better understand aviation's climate footprint.
         </p>
       </section>
+
+      <ContrailGallery />
 
       <section className="projects">
         <h2>Projects</h2>

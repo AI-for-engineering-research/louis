@@ -1,0 +1,137 @@
+.contrail-gallery {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+  padding: 40px;
+  margin-bottom: 60px;
+}
+
+.gallery-container {
+  max-width: 1200px;
+}
+
+.contrail-gallery h2 {
+  font-size: 32px;
+  color: #fff;
+  margin: 0 0 40px 0;
+  font-weight: 800;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.gallery-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.gallery-image {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  aspect-ratio: 1;
+}
+
+.gallery-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery-item h3 {
+  font-size: 20px;
+  color: #fff;
+  margin: 0 0 8px 0;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.gallery-item p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  margin: 0;
+  font-weight: 500;
+}
+
+.gallery-description {
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  border-left: 4px solid rgba(255, 255, 255, 0.3);
+}
+
+.gallery-description p {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1.8;
+  margin: 0;
+  font-weight: 500;
+}
+
+@media (max-width: 1024px) {
+  .gallery-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .contrail-gallery {
+    padding: 30px 20px;
+    margin-bottom: 40px;
+  }
+
+  .contrail-gallery h2 {
+    font-size: 28px;
+    margin-bottom: 30px;
+  }
+
+  .gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .gallery-item p {
+    font-size: 13px;
+  }
+
+  .gallery-description {
+    padding: 20px;
+  }
+
+  .gallery-description p {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .contrail-gallery {
+    padding: 20px 16px;
+    margin-bottom: 30px;
+  }
+
+  .contrail-gallery h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  .gallery-item h3 {
+    font-size: 18px;
+  }
+
+  .gallery-item p {
+    font-size: 12px;
+  }
+
+  .gallery-description p {
+    font-size: 13px;
+  }
+}
