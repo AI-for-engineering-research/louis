@@ -17,7 +17,7 @@ function Home() {
       id: 1,
       title: "Satellite Imagery vs. Synthetic Contrails",
       description: "Comparison of real satellite imagery of contrails with synthetic imagery computed from contrail modeling. This project explores how well physics-based models capture the appearance of contrails as seen from space.",
-      imagePath: "/louis/project1-placeholder.gif"
+      imagePath: "/louis/synthetic_images.png"
     },
     {
       id: 2,
