@@ -4,11 +4,12 @@ interface ProjectCardProps {
   title: string
   description: string
   imagePath: string
+  onClick?: () => void
 }
 
-function ProjectCard({ title, description, imagePath }: ProjectCardProps) {
+function ProjectCard({ title, description, imagePath, onClick }: ProjectCardProps) {
   return (
-    <div className="project-card">
+    <div className="project-card" onClick={onClick}>
       <div className="project-image">
         <img src={imagePath} alt={title} />
       </div>
