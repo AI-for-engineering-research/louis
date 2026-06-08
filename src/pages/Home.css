@@ -5,28 +5,36 @@
 }
 
 .bio {
-  background: white;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
   padding: 40px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .bio h1 {
-  font-size: 32px;
+  font-size: 48px;
   margin-bottom: 20px;
-  color: #333;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  font-weight: 800;
 }
 
 .bio p {
-  font-size: 18px;
-  line-height: 1.6;
-  color: #666;
+  font-size: 20px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.98);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  font-weight: 500;
 }
 
 .projects h2 {
-  font-size: 28px;
+  font-size: 40px;
   margin-bottom: 30px;
-  color: #333;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  font-weight: 800;
 }
 
 .projects-grid {
