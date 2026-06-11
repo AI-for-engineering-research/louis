@@ -32,7 +32,7 @@ const OLD_OPACITY = 0.12
 // changing with height via the user's shear, so as a puff sinks it samples a
 // different wind speed. Real grid dimensions convert the time-integrated drift
 // into world units (SHEAR_MAX is a touch exaggerated for on-screen visibility).
-const WIND0 = 20 // m/s, wind at formation altitude
+const WIND0 = 40 // m/s, wind at formation altitude
 const SHEAR_MAX = 0.04 // (m/s) per metre of altitude at shear = 1
 const M_PER_WORLD_Z = ((AXIS.lat.max - AXIS.lat.min) * 111_000) / BOX.d
 const M_PER_WORLD_Y = 2600 / BOX.h // 200–300 hPa layer ≈ 2.6 km deep
