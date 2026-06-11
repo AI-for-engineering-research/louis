@@ -1,4 +1,4 @@
-import { FLIGHT, ISSR, lerp } from './scene'
+import { AXIS, BOX, FLIGHT, ISSR, lerp } from './scene'
 import type { Params } from './simStore'
 import { T_TOTAL } from './simStore'
 
@@ -14,7 +14,7 @@ export const N_PUFFS = 64
 
 // One trail-discretisation step: the gap (in minutes) between successive puffs.
 export const TIMESTEP_MIN = T_TOTAL / N_PUFFS
-const PERSIST_STEPS = 2 // steps a puff survives after its centre leaves the ISSR
+const PERSIST_STEPS = 4 // steps a puff survives after its centre leaves the ISSR
 
 const SIGMA0 = 0.06 // initial half-width (world units)
 const H_GROWTH = 1.7 // cross-wind (z) half-width gain over full age
@@ -23,10 +23,20 @@ const X_HALF0 = 0.12 // along-flight half-extent (puffs overlap to blend)
 const X_GROWTH = 0.05
 const SINK_MAX = 1.25 // vertical descent over full age (world units)
 const SHEAR_TILT = 1.15 // sheet tilt (radians) at full shear + age (~66°)
-const SHEAR_DRIFT = 0.55 // cross-wind centroid drift at full shear + age
-const DRY_FACTOR = 0.18 // growth/drift multiplier for non-persistent puffs
+const DRY_FACTOR = 0.18 // growth multiplier for non-persistent puffs
 const FRESH_OPACITY = 0.5
 const OLD_OPACITY = 0.12
+
+// --- Cross-flight (northward, +z) advection ---
+// The contrail is carried by the ambient wind: WIND0 at the formation altitude,
+// changing with height via the user's shear, so as a puff sinks it samples a
+// different wind speed. Real grid dimensions convert the time-integrated drift
+// into world units (SHEAR_MAX is a touch exaggerated for on-screen visibility).
+const WIND0 = 20 // m/s, wind at formation altitude
+const SHEAR_MAX = 0.04 // (m/s) per metre of altitude at shear = 1
+const M_PER_WORLD_Z = ((AXIS.lat.max - AXIS.lat.min) * 111_000) / BOX.d
+const M_PER_WORLD_Y = 2600 / BOX.h // 200–300 hPa layer ≈ 2.6 km deep
+const T_SEC = T_TOTAL * 60 // full timeline length in seconds
 
 export interface PuffBirth {
   s: number // fraction along the path, 0..1
@@ -85,6 +95,20 @@ function centreOutsideMinutes(px: number, pz: number, an: number, prm: Params): 
   return (an - anExit) * T_TOTAL
 }
 
+/**
+ * Northward (+z, perpendicular to the flight path) advection of a puff centre,
+ * in world units, at normalized age `an`. Instantaneous wind is
+ * WIND0 + shear·Δaltitude; since the puff sinks linearly with age, integrating
+ * the wind over its life is a closed-form quadratic in age.
+ */
+function advectionZ(an: number, prm: Params): number {
+  const shearRate = SHEAR_MAX * prm.shear // (m/s) per metre of altitude
+  const sinkRate = SINK_MAX * prm.sink * M_PER_WORLD_Y // metres of descent per unit age
+  // ∫₀^age [WIND0 − shearRate·sink(t)] dt, with sink(t) linear in age.
+  const driftM = T_SEC * (WIND0 * an - 0.5 * shearRate * sinkRate * an * an)
+  return driftM / M_PER_WORLD_Z
+}
+
 /** Transform + opacity for one puff at the current simulation time. */
 export function puffAt(p: PuffBirth, time: number, prm: Params): PuffState {
   const frac = time / T_TOTAL
@@ -99,11 +123,10 @@ export function puffAt(p: PuffBirth, time: number, prm: Params): PuffState {
   const sy = SIGMA0 + V_GROWTH * an * growth
 
   const sink = SINK_MAX * prm.sink * an
-  const drift = SHEAR_DRIFT * prm.shear * an * (p.inIssr ? 1 : DRY_FACTOR)
   const tilt = SHEAR_TILT * prm.shear * an
   const px = p.x
   const py = FLIGHT.y - sink
-  const pz = FLIGHT.z + drift
+  const pz = FLIGHT.z + advectionZ(an, prm)
 
   // Survive for PERSIST_STEPS timesteps after the centre leaves the ISSR,
   // fading over the final step; then gone.
