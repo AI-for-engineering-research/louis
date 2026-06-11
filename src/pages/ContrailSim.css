@@ -38,8 +38,8 @@
   height: 70vh;
   min-height: 460px;
   max-height: 760px;
-  /* Light sky gradient behind the transparent WebGL canvas */
-  background: linear-gradient(180deg, #eef5fc 0%, #cfe4f7 48%, #bcd8f1 100%);
+  /* Light-gray studio backdrop behind the transparent WebGL canvas */
+  background: linear-gradient(180deg, #f5f6f7 0%, #e9ebed 55%, #dee1e4 100%);
 }
 
 .sim-canvas-wrap canvas {
@@ -50,6 +50,118 @@
 
 .sim-canvas-wrap canvas:active {
   cursor: grabbing;
+}
+
+/* --- Timeline + physics controls --- */
+.sim-controls {
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 14px;
+  padding: 20px 24px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sim-transport {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sim-btn {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: #0066cc;
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.sim-btn:hover {
+  background: #0052a6;
+}
+
+.sim-btn-ghost {
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 20px;
+}
+
+.sim-btn-ghost:hover {
+  background: #cbd5e1;
+}
+
+.sim-scrub {
+  flex: 1;
+  min-width: 120px;
+}
+
+.sim-time {
+  flex: 0 0 auto;
+  min-width: 64px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.sim-sliders {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.sim-slider label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.sim-slider label em {
+  font-weight: 400;
+  font-style: normal;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.sim-slider-val {
+  font-variant-numeric: tabular-nums;
+  color: #0066cc;
+}
+
+.sim-controls input[type='range'] {
+  width: 100%;
+  accent-color: #0066cc;
+  cursor: pointer;
+}
+
+@media (max-width: 680px) {
+  .sim-sliders {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .sim-controls {
+    padding: 16px;
+  }
+
+  .sim-slider label em {
+    display: none;
+  }
 }
 
 @media (max-width: 768px) {

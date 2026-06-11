@@ -1,13 +1,12 @@
-import Airplane from './Airplane'
+import Contrail from './Contrail'
 import IssrSlab from './IssrSlab'
 import NwpGrid from './NwpGrid'
 import SceneControls from './SceneControls'
-import { FLIGHT } from './scene'
 
 /**
- * Assembles the 3D view: soft sky lighting, the NWP grid, the ISSR slab, and
- * the aircraft on its cruise path. Phase 1 — the aircraft is static; the
- * contrail and timeline arrive in Phase 2.
+ * Assembles the 3D view: soft lighting, the NWP grid, the ISSR slab, and the
+ * contrail system (the aircraft plus its aging Gaussian-plume puffs). Playback
+ * and the physics sliders are driven by the simulation store.
  */
 export default function Scene() {
   return (
@@ -18,7 +17,7 @@ export default function Scene() {
 
       <NwpGrid />
       <IssrSlab />
-      <Airplane position={[FLIGHT.x0 + 6, FLIGHT.y, FLIGHT.z]} />
+      <Contrail />
 
       <SceneControls />
     </>
