@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import Home from './pages/Home'
 import Usage from './pages/Usage'
 import './App.css'
 
-type Page = 'home' | 'usage'
+// Lazy-loaded so the Three.js bundle only loads when this page is opened.
+const ContrailSim = lazy(() => import('./pages/ContrailSim'))
+
+type Page = 'home' | 'usage' | 'sim'
 
 function App() {
   const [page, setPage] = useState<Page>('home')
@@ -24,6 +27,14 @@ function App() {
             </li>
             <li>
               <button
+                className={page === 'sim' ? 'active' : ''}
+                onClick={() => setPage('sim')}
+              >
+                Contrail simulation
+              </button>
+            </li>
+            <li>
+              <button
                 className={page === 'usage' ? 'active' : ''}
                 onClick={() => setPage('usage')}
               >
@@ -35,8 +46,11 @@ function App() {
       </nav>
 
       <main className="main-content">
-        {page === 'home' && <Home />}
-        {page === 'usage' && <Usage />}
+        <Suspense fallback={<div className="page-loading">Loading…</div>}>
+          {page === 'home' && <Home />}
+          {page === 'usage' && <Usage />}
+          {page === 'sim' && <ContrailSim />}
+        </Suspense>
       </main>
 
       <footer className="footer">
