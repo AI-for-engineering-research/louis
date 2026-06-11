@@ -12,6 +12,11 @@ const TAU_K = 1.6 // optical-depth → coldness saturation
 const PUFF_AMP = 1.3 // optical-depth gain per puff
 const CIRRUS_AMP = 0.22 // faint background cirrus
 
+// Lookup tables to keep the per-pixel loops free of exp()/ramp() each frame.
+const TAU_LUT_MAX = 5 // optical depth spanned by the 256-entry colour LUT
+const GAUSS_N = 512 // Gaussian-falloff LUT resolution
+const GAUSS_QMAX = 18 // max squared radius it covers (±3σ in each axis)
+
 // Brightness-temperature range shown by the colormap / colorbar (Kelvin).
 const BT_WARM = 290 // background (low optical depth)
 const BT_COLD = 220 // thick cold contrail
@@ -99,6 +104,28 @@ export default function SatelliteView() {
     return f
   }, [])
 
+  // tau → RGB, precomputed (collapses exp + ramp into one lookup per pixel).
+  const colorLut = useMemo(() => {
+    const lut = new Uint8Array(256 * 3)
+    for (let i = 0; i < 256; i++) {
+      const tauv = (i / 255) * TAU_LUT_MAX
+      const [r, g, b] = ramp(1 - Math.exp(-TAU_K * tauv))
+      lut[i * 3] = r
+      lut[i * 3 + 1] = g
+      lut[i * 3 + 2] = b
+    }
+    return lut
+  }, [])
+
+  // exp(-r²/2) sampled by squared radius, for puff accumulation.
+  const gaussLut = useMemo(() => {
+    const lut = new Float32Array(GAUSS_N + 1)
+    for (let i = 0; i <= GAUSS_N; i++) {
+      lut[i] = Math.exp(-0.5 * (i / GAUSS_N) * GAUSS_QMAX)
+    }
+    return lut
+  }, [])
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -139,6 +166,14 @@ export default function SatelliteView() {
       tau.set(cirrus)
       const time = clock.time
       const { params } = useSimStore.getState()
+      const frac = flightFraction(time)
+      // The contrail exists only behind the aircraft, so clip every puff's
+      // footprint to columns at or behind the plane's current longitude. This
+      // removes the (unphysical) cold pixels the Gaussian tails would otherwise
+      // bleed ahead of the marker.
+      const planeGx = ((lerp(FLIGHT.x0, FLIGHT.x1, frac) + BOX.w / 2) / BOX.w) * GRID_W
+      const xClip = Math.min(GRID_W - 1, Math.floor(planeGx))
+      const qScale = GAUSS_N / GAUSS_QMAX
       const centers: [number, number][] = []
       for (let p = 0; p < puffs.length; p++) {
         const ps = puffAt(puffs[p], time, params)
@@ -153,28 +188,32 @@ export default function SatelliteView() {
         const sgy = Math.max(0.6, (sigZ / BOX.d) * GRID_H)
         const amp = ps.opacity * PUFF_AMP
         const x0 = Math.max(0, Math.floor(cgx - 3 * sgx))
-        const x1 = Math.min(GRID_W - 1, Math.ceil(cgx + 3 * sgx))
+        const x1 = Math.min(xClip, Math.ceil(cgx + 3 * sgx))
         const y0 = Math.max(0, Math.floor(cgy - 3 * sgy))
         const y1 = Math.min(GRID_H - 1, Math.ceil(cgy + 3 * sgy))
         for (let gy = y0; gy <= y1; gy++) {
           const dz = (gy - cgy) / sgy
-          const ez = -0.5 * dz * dz
+          const dz2 = dz * dz
+          const row = gy * GRID_W
           for (let gx = x0; gx <= x1; gx++) {
             const dx = (gx - cgx) / sgx
-            tau[gy * GRID_W + gx] += amp * Math.exp(ez - 0.5 * dx * dx)
+            const q = dz2 + dx * dx
+            if (q < GAUSS_QMAX) tau[row + gx] += amp * gaussLut[(q * qScale) | 0]
           }
         }
       }
 
-      // --- map optical depth → brightness temperature colour ---
+      // --- map optical depth → brightness temperature colour (via LUT) ---
       const data = buf.image.data
+      const cScale = 255 / TAU_LUT_MAX
       for (let i = 0; i < tau.length; i++) {
-        const c = 1 - Math.exp(-TAU_K * tau[i])
-        const [r, g, b] = ramp(c)
+        let ti = tau[i] * cScale
+        if (ti > 255) ti = 255
+        const idx = (ti | 0) * 3
         const j = i * 4
-        data[j] = r
-        data[j + 1] = g
-        data[j + 2] = b
+        data[j] = colorLut[idx]
+        data[j + 1] = colorLut[idx + 1]
+        data[j + 2] = colorLut[idx + 2]
         data[j + 3] = 255
       }
       buf.ctx.putImageData(buf.image, 0, 0)
@@ -211,17 +250,19 @@ export default function SatelliteView() {
         ctx.stroke()
       }
 
-      // Aircraft marker at its current longitude.
-      const frac = flightFraction(time)
+      // Aircraft marker, at the contrail's (clipped) leading edge.
       const planeX = wxToPx(lerp(FLIGHT.x0, FLIGHT.x1, frac))
       const planeY = wzToPy(FLIGHT.z)
       ctx.fillStyle = '#ffd54a'
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)'
+      ctx.lineWidth = 1
       ctx.beginPath()
-      ctx.moveTo(planeX + 6, planeY)
-      ctx.lineTo(planeX - 4, planeY - 4)
-      ctx.lineTo(planeX - 4, planeY + 4)
+      ctx.moveTo(planeX + 11, planeY)
+      ctx.lineTo(planeX - 7, planeY - 7)
+      ctx.lineTo(planeX - 7, planeY + 7)
       ctx.closePath()
       ctx.fill()
+      ctx.stroke()
 
       // Image border.
       ctx.strokeStyle = 'rgba(255,255,255,0.25)'
