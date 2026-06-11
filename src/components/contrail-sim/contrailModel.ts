@@ -5,10 +5,16 @@ import { T_TOTAL } from './simStore'
 // Cartoon Gaussian-plume model. The flight path is discretized into puffs; each
 // is "born" as the aircraft passes its location and then ages. With age a puff
 // spreads (mostly cross-wind, into a thin wide sheet), slowly sinks, and shears
-// (the sheet tilts about the flight axis and drifts cross-wind). Puffs born in
-// the ice-supersaturated region persist; those born in dry air quickly fade.
+// (the sheet tilts about the flight axis and drifts cross-wind). A puff only
+// persists while its *centre* sits inside the ice-supersaturated region; once
+// the centre leaves the ISSR box — born in dry air, or sunk out of the humid
+// layer — the ice sublimates and the puff vanishes within PERSIST_STEPS steps.
 
 export const N_PUFFS = 64
+
+// One trail-discretisation step: the gap (in minutes) between successive puffs.
+export const TIMESTEP_MIN = T_TOTAL / N_PUFFS
+const PERSIST_STEPS = 2 // steps a puff survives after its centre leaves the ISSR
 
 const SIGMA0 = 0.06 // initial half-width (world units)
 const H_GROWTH = 1.7 // cross-wind (z) half-width gain over full age
@@ -62,6 +68,23 @@ export function flightFraction(time: number): number {
   return Math.min(Math.max(time / T_TOTAL, 0), 1)
 }
 
+/**
+ * Minutes the puff centre has spent outside the ISSR box at the given age
+ * (0 while still inside). Longitude/latitude membership is fixed per puff, and
+ * altitude decreases monotonically as it sinks, so the exit age is analytic.
+ */
+function centreOutsideMinutes(px: number, pz: number, an: number, prm: Params): number {
+  const xIn = px >= ISSR.x[0] && px <= ISSR.x[1]
+  const zIn = pz >= ISSR.z[0] && pz <= ISSR.z[1]
+  if (!xIn || !zIn) return an * T_TOTAL // never in the humid column → outside since birth
+
+  const sinkRate = SINK_MAX * prm.sink // descent per unit normalized age
+  if (sinkRate <= 1e-6) return 0
+  const anExit = (FLIGHT.y - ISSR.y[0]) / sinkRate // age when the centre sinks below the slab
+  if (an <= anExit) return 0
+  return (an - anExit) * T_TOTAL
+}
+
 /** Transform + opacity for one puff at the current simulation time. */
 export function puffAt(p: PuffBirth, time: number, prm: Params): PuffState {
   const frac = time / T_TOTAL
@@ -78,16 +101,24 @@ export function puffAt(p: PuffBirth, time: number, prm: Params): PuffState {
   const sink = SINK_MAX * prm.sink * an
   const drift = SHEAR_DRIFT * prm.shear * an * (p.inIssr ? 1 : DRY_FACTOR)
   const tilt = SHEAR_TILT * prm.shear * an
+  const px = p.x
+  const py = FLIGHT.y - sink
+  const pz = FLIGHT.z + drift
 
-  let opacity = lerp(FRESH_OPACITY, OLD_OPACITY, an) * humid
-  if (!p.inIssr) opacity *= Math.max(0, 1 - an * 6) // dry air: fade within ~10 min
+  // Survive for PERSIST_STEPS timesteps after the centre leaves the ISSR,
+  // fading over the final step; then gone.
+  const outside = centreOutsideMinutes(px, pz, an, prm)
+  const life = Math.min(
+    1,
+    Math.max(0, (PERSIST_STEPS * TIMESTEP_MIN - outside) / TIMESTEP_MIN),
+  )
+
+  let opacity = lerp(FRESH_OPACITY, OLD_OPACITY, an) * humid * life
   opacity = Math.min(0.55, Math.max(0, opacity))
 
   return {
     visible: opacity > 0.01,
-    px: p.x,
-    py: FLIGHT.y - sink,
-    pz: FLIGHT.z + drift,
+    px, py, pz,
     sx, sy, sz,
     tilt,
     opacity,
