@@ -1,6 +1,6 @@
 # Weekly AI Usage Log
 
-## Week 1 (Jun 8, 2026)
+## Week 1 (Jun 8–11, 2026)
 
 ### Session: Project Planning via grill-with-docs
 **Date**: 2026-06-08  
@@ -104,3 +104,42 @@
 6. ✅ Clean dark backgrounds instead of glassmorphism
 
 **AI Assistance**: Claude Haiku 4.5 — performance profiling & debugging, CSS optimization, React component architecture, responsive design, animation implementation
+
+---
+
+### Session: Interactive 3D contrail simulation
+**Date**: 2026-06-11  
+**Model**: Claude Opus 4.8 (1M context)  
+**Task**: Design and build an interactive 3D + satellite-view contrail visualization for the portfolio
+
+**Summary**:
+- Planned the feature with a grill-me session, resolving the full design tree (render engine, placement, scene composition, contrail parametrization, timeline, satellite view, interactivity) before writing any code
+- Built a new lazy-loaded "Contrail simulation" page with react-three-fiber (Three.js), code-split so the ~290 KB 3D bundle never touches the Home page load
+- Implemented in reviewable phases with checkpoints between each
+
+**Work Completed**:
+
+1. **3D scene** — NWP grid (wireframe box, faint gridlines, labeled lon/lat/pressure axes), a translucent ice-supersaturated region (ISSR) slab, and a stylized primitive aircraft on a cruise path; light-gray studio backdrop; orbit camera with idle auto-rotate
+2. **Contrail model** — a row of aging Gaussian puffs that spread into a thin sheared sheet, slowly sink, and shear with the wind; rendered as translucent ellipsoids
+3. **Timeline & physics** — play / pause / scrub / loop over a 60-minute timeline plus live sliders for wind shear, sink rate, and humidity (RHi); a non-reactive clock keeps the 60 fps animation off the React render path
+4. **Persistence** — puffs survive only while their center is inside the ISSR, dissipating a few timesteps after the center leaves (born in dry air, or sunk out of the humid layer)
+5. **Advection** — puffs carried northward by a 40 m/s wind whose value at altitude is derived from the shear, integrated over each puff's lifetime
+6. **Synthetic-IR satellite view** — a top-down 2D render derived live from the same puffs: optical depth → brightness-temperature colormap with a Kelvin colorbar, lon/lat axes, ISSR footprint, aircraft marker, and faint background cirrus; a segmented toggle switches views with shared timeline state
+7. **Polish & correctness** — an orange centerline through the puff centers in both views to visualize the advection, leading-edge clipping so no contrail renders ahead of the aircraft, and lookup-table optimization of the satellite render for smooth playback
+8. **Deployment** — merged to main and deployed to GitHub Pages; modernized the deploy workflow to current (non-deprecated) action versions
+
+**Key Learnings**:
+- Code-splitting the Three.js bundle via React.lazy keeps the heavy 3D page from slowing the rest of the site
+- Driving 60 fps animation imperatively (mutating meshes in a frame loop) instead of via React state is essential for smoothness with dozens of objects
+- Tying the synthetic satellite image directly to the 3D model state keeps the two views consistent by construction
+- Per-pixel exp()/colormap work in the 2D satellite render needed lookup tables to stay smooth
+
+**Deliverables**:
+1. ✅ Interactive 3D contrail simulation page (lazy-loaded)
+2. ✅ Aging Gaussian-plume contrail with spread / sink / shear / advection
+3. ✅ Timeline controls and live physics sliders
+4. ✅ ISSR-based persistence and leading-edge clipping
+5. ✅ Synthetic-IR satellite view with a 3D/satellite toggle
+6. ✅ Deployed to GitHub Pages; modernized the deploy workflow
+
+**AI Assistance**: Claude Opus 4.8 (1M context) — design stress-testing (grill-me), react-three-fiber scene construction, cartoon physics modeling, performance optimization, GitHub Actions maintenance
