@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import Scene from '../components/contrail-sim/Scene'
+import TimelineControls from '../components/contrail-sim/TimelineControls'
 import './ContrailSim.css'
 
 /**
@@ -18,7 +19,9 @@ export default function ContrailSim() {
           A cartoon of the modelling pipeline behind my research. An aircraft
           crosses a numerical weather prediction (NWP) grid and forms a
           contrail, which spreads, slowly sinks, and shears with the wind as it
-          ages. Drag to orbit, scroll to zoom.
+          ages — persisting only where the air is ice-supersaturated. Press play
+          or scrub through time, and adjust the physics below. Drag to orbit,
+          scroll to zoom.
         </p>
       </header>
 
@@ -35,6 +38,8 @@ export default function ContrailSim() {
           </Canvas>
         </div>
       </div>
+
+      <TimelineControls />
     </div>
   )
 }
