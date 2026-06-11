@@ -27,10 +27,52 @@
   max-width: 70ch;
 }
 
+.sim-viewtabs {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.sim-viewtabs button {
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sim-viewtabs button:hover {
+  color: #1e293b;
+}
+
+.sim-viewtabs button.active {
+  background: #0066cc;
+  color: #fff;
+}
+
 .sim-stage {
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.sim-3d {
+  width: 100%;
+  height: 100%;
+}
+
+.sim-sat-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .sim-canvas-wrap {
