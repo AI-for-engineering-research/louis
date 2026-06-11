@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import Airplane from './Airplane'
 import { FLIGHT, lerp } from './scene'
-import { clock, PLAY_RATE, T_TOTAL, useSimStore } from './simStore'
+import { clock, useSimStore } from './simStore'
 import { flightFraction, makePuffs, puffAt } from './contrailModel'
 
 /**
@@ -17,7 +17,6 @@ export default function Contrail() {
 
   const meshes = useRef<(THREE.Mesh | null)[]>([])
   const planeRef = useRef<THREE.Group>(null)
-  const uiAccum = useRef(0)
 
   // Shared low-poly sphere; one material per puff so each can fade independently.
   const geometry = useMemo(() => new THREE.SphereGeometry(1, 14, 10), [])
@@ -44,23 +43,10 @@ export default function Contrail() {
     }
   }, [geometry, materials])
 
-  useFrame((_, delta) => {
-    const { playing, params, setDisplayTime } = useSimStore.getState()
+  useFrame(() => {
+    const { params } = useSimStore.getState()
 
-    // Advance + loop the clock while playing.
-    if (playing) {
-      clock.time += delta * PLAY_RATE
-      if (clock.time >= T_TOTAL) clock.time -= T_TOTAL
-    }
-
-    // Throttled UI sync (~15 Hz) for the scrubber and readout.
-    uiAccum.current += delta
-    if (uiAccum.current >= 0.066) {
-      uiAccum.current = 0
-      setDisplayTime(clock.time)
-    }
-
-    // Fly the aircraft along the cruise path.
+    // Fly the aircraft along the cruise path (clock advanced by SimDriver).
     const frac = flightFraction(clock.time)
     if (planeRef.current) {
       planeRef.current.position.set(lerp(FLIGHT.x0, FLIGHT.x1, frac), FLIGHT.y, FLIGHT.z)
