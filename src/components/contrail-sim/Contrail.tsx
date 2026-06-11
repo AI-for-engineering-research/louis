@@ -36,12 +36,34 @@ export default function Contrail() {
     [puffs],
   )
 
+  // Polyline through the puff centres, to make the advection legible.
+  const centerline = useMemo(() => {
+    const positions = new Float32Array(puffs.length * 3)
+    const geom = new THREE.BufferGeometry()
+    const attr = new THREE.BufferAttribute(positions, 3)
+    attr.setUsage(THREE.DynamicDrawUsage)
+    geom.setAttribute('position', attr)
+    geom.setDrawRange(0, 0)
+    const material = new THREE.LineBasicMaterial({
+      color: '#ff8a2a',
+      transparent: true,
+      opacity: 0.95,
+      depthTest: false,
+    })
+    const line = new THREE.Line(geom, material)
+    line.frustumCulled = false
+    line.renderOrder = 10 // draw over the translucent puffs
+    return { line, geom, material, positions }
+  }, [puffs])
+
   useEffect(() => {
     return () => {
       geometry.dispose()
       materials.forEach((m) => m.dispose())
+      centerline.geom.dispose()
+      centerline.material.dispose()
     }
-  }, [geometry, materials])
+  }, [geometry, materials, centerline])
 
   useFrame(() => {
     const { params } = useSimStore.getState()
@@ -52,18 +74,31 @@ export default function Contrail() {
       planeRef.current.position.set(lerp(FLIGHT.x0, FLIGHT.x1, frac), FLIGHT.y, FLIGHT.z)
     }
 
-    // Update every puff.
+    // Update every puff, and collect visible centres for the centreline.
+    const linePos = centerline.positions
+    let k = 0
     for (let i = 0; i < puffs.length; i++) {
-      const m = meshes.current[i]
-      if (!m) continue
       const ps = puffAt(puffs[i], clock.time, params)
-      m.visible = ps.visible
-      if (!ps.visible) continue
-      m.position.set(ps.px, ps.py, ps.pz)
-      m.scale.set(ps.sx, ps.sy, ps.sz)
-      m.rotation.set(ps.tilt, 0, 0)
-      materials[i].opacity = ps.opacity
+      const m = meshes.current[i]
+      if (m) {
+        m.visible = ps.visible
+        if (ps.visible) {
+          m.position.set(ps.px, ps.py, ps.pz)
+          m.scale.set(ps.sx, ps.sy, ps.sz)
+          m.rotation.set(ps.tilt, 0, 0)
+          materials[i].opacity = ps.opacity
+        }
+      }
+      if (ps.visible) {
+        linePos[k * 3] = ps.px
+        linePos[k * 3 + 1] = ps.py
+        linePos[k * 3 + 2] = ps.pz
+        k++
+      }
     }
+    centerline.geom.setDrawRange(0, k)
+    centerline.geom.attributes.position.needsUpdate = true
+    centerline.line.visible = k > 1
   })
 
   return (
@@ -79,6 +114,8 @@ export default function Contrail() {
           visible={false}
         />
       ))}
+
+      <primitive object={centerline.line} />
 
       <group ref={planeRef}>
         <Airplane />

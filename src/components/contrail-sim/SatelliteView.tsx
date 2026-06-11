@@ -139,9 +139,11 @@ export default function SatelliteView() {
       tau.set(cirrus)
       const time = clock.time
       const { params } = useSimStore.getState()
+      const centers: [number, number][] = []
       for (let p = 0; p < puffs.length; p++) {
         const ps = puffAt(puffs[p], time, params)
         if (!ps.visible) continue
+        centers.push([ps.px, ps.pz])
         const cosT = Math.cos(ps.tilt)
         const sinT = Math.sin(ps.tilt)
         const sigZ = Math.sqrt((ps.sz * cosT) ** 2 + (ps.sy * sinT) ** 2)
@@ -194,6 +196,20 @@ export default function SatelliteView() {
       ctx.font = '11px "Segoe UI", sans-serif'
       ctx.textAlign = 'left'
       ctx.fillText('ISSR', wxToPx(ISSR.x[0]) + 4, iy + 13)
+
+      // Contrail centreline through the puff centres (visualises advection).
+      if (centers.length > 1) {
+        ctx.strokeStyle = 'rgba(255,138,42,0.95)'
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        for (let c = 0; c < centers.length; c++) {
+          const X = wxToPx(centers[c][0])
+          const Y = wzToPy(centers[c][1])
+          if (c === 0) ctx.moveTo(X, Y)
+          else ctx.lineTo(X, Y)
+        }
+        ctx.stroke()
+      }
 
       // Aircraft marker at its current longitude.
       const frac = flightFraction(time)
