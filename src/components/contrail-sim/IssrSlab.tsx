@@ -8,6 +8,7 @@ import { ISSR, rangeBox } from './scene'
  */
 export default function IssrSlab() {
   const { center, size } = rangeBox(ISSR)
+  const midY = (ISSR.y[0] + ISSR.y[1]) / 2
 
   return (
     <group>
@@ -22,16 +23,17 @@ export default function IssrSlab() {
         <Edges color="#3d86c6" />
       </mesh>
 
-      <Billboard position={[center[0], ISSR.y[1] + 0.32, center[2]]}>
+      {/* Short label, set off to the side of the slab rather than over it */}
+      <Billboard position={[center[0], midY, ISSR.z[1] + 0.6]}>
         <Text
-          fontSize={0.24}
+          fontSize={0.32}
           color="#1d5b8f"
           anchorX="center"
           anchorY="middle"
-          outlineWidth={0.006}
+          outlineWidth={0.008}
           outlineColor="#ffffff"
         >
-          ice-supersaturated region (RHi {'>'} 100%)
+          ISSR
         </Text>
       </Billboard>
     </group>

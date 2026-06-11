@@ -32,7 +32,7 @@ export const FLIGHT = {
 // aircraft enters and exits it. Inside it a contrail persists and spreads;
 // outside (dry air) it fades. Stored as [min, max] ranges per axis.
 export const ISSR = {
-  x: [-BOX.w * 0.18, BOX.w * 0.42] as [number, number],
+  x: [-BOX.w * 0.4, BOX.w * 0.46] as [number, number],
   y: [BOX.h * 0.55, BOX.h * 0.86] as [number, number],
   z: [-BOX.d / 2, BOX.d / 2] as [number, number],
 } as const

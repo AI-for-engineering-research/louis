@@ -38,6 +38,8 @@ export default function SceneControls() {
       ref={ref}
       makeDefault
       enablePan
+      enableDamping={false}
+      rotateSpeed={0.9}
       autoRotate
       autoRotateSpeed={0.45}
       minDistance={6}
