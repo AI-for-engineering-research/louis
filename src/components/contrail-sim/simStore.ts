@@ -2,8 +2,8 @@ import { create } from 'zustand'
 
 // Full timeline length, in simulated minutes.
 export const T_TOTAL = 60
-// Playback speed: simulated minutes advanced per real second (≈17 s per loop).
-export const PLAY_RATE = 3.5
+// Playback speed: simulated minutes advanced per real second (≈11 s per loop).
+export const PLAY_RATE = 5.25
 
 // The live simulation time, mutated every frame by the render loop and read
 // transiently by the contrail/airplane. Deliberately NOT in the reactive store

@@ -1,9 +1,23 @@
 import { useSimStore, T_TOTAL, type Params } from './simStore'
 
-const SLIDERS: { key: keyof Params; label: string; hint: string }[] = [
-  { key: 'shear', label: 'Wind shear', hint: 'tilts & drifts the contrail' },
-  { key: 'sink', label: 'Sink rate', hint: 'how fast ice crystals fall' },
-  { key: 'humidity', label: 'Humidity', hint: 'persistence & spreading' },
+const pct = (v: number) => `${Math.round(v * 100)}%`
+
+const SLIDERS: {
+  key: keyof Params
+  label: string
+  hint: string
+  display: (v: number) => string
+}[] = [
+  { key: 'shear', label: 'Wind shear', hint: 'tilts & drifts the contrail', display: pct },
+  { key: 'sink', label: 'Sink rate', hint: 'how fast ice crystals fall', display: pct },
+  {
+    key: 'humidity',
+    label: 'Humidity',
+    hint: 'RHi — persistence & spread',
+    // A contrail only persists in ice-supersaturated air, so this maps to
+    // RHi 100–150% (100% = barely persistent, 150% = strongly persistent).
+    display: (v) => `RHi ${Math.round(100 + v * 50)}%`,
+  },
 ]
 
 /**
@@ -47,13 +61,13 @@ export default function TimelineControls() {
       </div>
 
       <div className="sim-sliders">
-        {SLIDERS.map(({ key, label, hint }) => (
+        {SLIDERS.map(({ key, label, hint, display }) => (
           <div className="sim-slider" key={key}>
             <label htmlFor={`slider-${key}`}>
               <span>
                 {label} <em>{hint}</em>
               </span>
-              <span className="sim-slider-val">{Math.round(params[key] * 100)}%</span>
+              <span className="sim-slider-val">{display(params[key])}</span>
             </label>
             <input
               id={`slider-${key}`}
