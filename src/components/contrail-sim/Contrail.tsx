@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import Airplane from './Airplane'
 import { FLIGHT, lerp } from './scene'
@@ -14,9 +14,19 @@ import { flightFraction, makePuffs, puffAt } from './contrailModel'
  */
 export default function Contrail() {
   const puffs = useMemo(() => makePuffs(), [])
+  const gl = useThree((s) => s.gl)
 
   const meshes = useRef<(THREE.Mesh | null)[]>([])
   const planeRef = useRef<THREE.Group>(null)
+
+  // Clip the puffs at the aircraft's longitude — there is no contrail ahead of
+  // the plane. Normal -X keeps the half-space x ≤ constant; constant tracks the
+  // plane each frame. (Only the puff materials use it, so the plane/grid show.)
+  const clipPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0), [])
+
+  useEffect(() => {
+    gl.localClippingEnabled = true
+  }, [gl])
 
   // Shared low-poly sphere; one material per puff so each can fade independently.
   const geometry = useMemo(() => new THREE.SphereGeometry(1, 14, 10), [])
@@ -31,9 +41,10 @@ export default function Contrail() {
             depthWrite: false,
             roughness: 0.95,
             metalness: 0,
+            clippingPlanes: [clipPlane],
           }),
       ),
-    [puffs],
+    [puffs, clipPlane],
   )
 
   // Polyline through the puff centres, to make the advection legible.
@@ -70,9 +81,12 @@ export default function Contrail() {
 
     // Fly the aircraft along the cruise path (clock advanced by SimDriver).
     const frac = flightFraction(clock.time)
+    const planeX = lerp(FLIGHT.x0, FLIGHT.x1, frac)
     if (planeRef.current) {
-      planeRef.current.position.set(lerp(FLIGHT.x0, FLIGHT.x1, frac), FLIGHT.y, FLIGHT.z)
+      planeRef.current.position.set(planeX, FLIGHT.y, FLIGHT.z)
     }
+    // Clip puffs to behind the aircraft.
+    clipPlane.constant = planeX
 
     // Update every puff, and collect visible centres for the centreline.
     const linePos = centerline.positions
