@@ -9,7 +9,7 @@
 // derives its geometry from these constants and helpers, so the 3D and 2D
 // views stay consistent by construction.
 
-export const BOX = { w: 9, h: 4.5, d: 5.5 } as const
+export const BOX = { w: 14, h: 4.5, d: 8.5 } as const
 
 // Real-world ranges used for axis tick labels. Pressure runs 300 hPa at the
 // floor up to 200 hPa at the top (decreasing with altitude).
