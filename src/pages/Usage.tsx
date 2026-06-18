@@ -93,7 +93,14 @@ function Usage() {
               <li>Planned refactoring of calculations via a grill-me session: goal is to stream large dataset instead of loading it all in memory</li>
               <li>Drafted the plan using netCDF4 using the changes that were made in another repository as a baseline</li>
               <li>Implemented the changes, testing and debugging of the new feature. Probably saved me a day or two of work</li>
+              <li>Tested Prashanth's /visual-walkthrough skill on a semi complex code base, the result are pretty cool!</li>
             </ul>
+            <p>
+              <strong>Flowchart:</strong>{' '}
+              <a href="logs/make_crtm_input_flowchart.html" target="_blank" rel="noopener noreferrer">
+                make_crtm_input — NWP → CRTM input pipeline
+              </a>
+            </p>
             <p><strong>AI Assistance:</strong> Claude Opus 4.8 (1M context) — design stress-testing (grill-me)</p>
             <p><strong>Comments:</strong> This exercise was interesting because I have ground truth data for the LLM to compare to as it makes the changes. The code changes are supposed to be 0-diff, the computation is just
             batched and streamed to disk instead of occuring all in memory. I broke this up in two tasks: first batching (0-diff), then parallelism over the batches (0-diff also, but harder for the agent to check). We only

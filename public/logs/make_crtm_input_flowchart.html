@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>make_crtm_input — NWP → CRTM input pipeline</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f9fb;--fg:#1a1a2e;
+  --blue:#2563eb;--blue-light:#dbeafe;--blue-border:#93c5fd;
+  --green:#16a34a;--green-light:#dcfce7;--green-border:#86efac;
+  --orange:#ea580c;--orange-light:#fff7ed;--orange-border:#fdba74;
+  --teal:#0d9488;--teal-light:#ccfbf1;--teal-border:#5eead4;
+  --purple:#7c3aed;--purple-light:#ede9fe;--purple-border:#c4b5fd;
+  --gray:#64748b;--gray-light:#f1f5f9;--gray-border:#cbd5e1;
+  --red:#dc2626;--red-light:#fef2f2;--red-border:#fca5a5;
+  --arrow:#94a3b8;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.10),0 2px 4px rgba(0,0,0,.06);
+  --radius:8px;
+  --font-sans:'Inter',system-ui,-apple-system,sans-serif;
+  --font-mono:'JetBrains Mono','Fira Code',monospace;
+}
+html{font-size:15px;scroll-behavior:smooth}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--fg);line-height:1.6;padding:0}
+
+.header{background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);color:#fff;padding:2.5rem 2rem 2rem;text-align:center}
+.header h1{font-size:1.9rem;font-weight:700;letter-spacing:-.02em;margin-bottom:.35rem}
+.header .subtitle{font-size:1rem;opacity:.92;font-weight:400;max-width:760px;margin:0 auto}
+.header .meta{margin-top:.85rem;font-size:.78rem;opacity:.78;font-family:var(--font-mono)}
+.header .meta a{color:#fff;text-decoration:underline;text-decoration-style:dotted}
+
+.container{max-width:1200px;margin:0 auto;padding:1.5rem 1.5rem 3rem}
+@media(min-width:1200px){
+  body:has(.toc-toggle) .container{
+    margin-left:calc(50vw - 600px + 6rem);
+    margin-right:auto;
+  }
+}
+
+.legend{display:flex;flex-wrap:wrap;gap:.6rem 1.4rem;justify-content:center;margin:1.2rem 0 1.8rem;padding:1rem;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow)}
+.legend-item{display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--fg)}
+.legend-swatch{width:16px;height:16px;border-radius:3px;border:1.5px solid}
+.sw-blue{background:var(--blue-light);border-color:var(--blue)}
+.sw-green{background:var(--green-light);border-color:var(--green)}
+.sw-orange{background:var(--orange-light);border-color:var(--orange)}
+.sw-teal{background:var(--teal-light);border-color:var(--teal)}
+.sw-purple{background:var(--purple-light);border-color:var(--purple)}
+.sw-gray{background:var(--gray-light);border-color:var(--gray)}
+.sw-red{background:var(--red-light);border-color:var(--red)}
+
+.flow{display:flex;flex-direction:column;align-items:center;gap:0}
+
+.arrow{display:flex;flex-direction:column;align-items:center;color:var(--arrow);line-height:1}
+.arrow svg{display:block}
+.arrow-label{font-size:.72rem;color:var(--gray);margin:2px 0;font-family:var(--font-mono)}
+
+.node{position:relative;width:100%;max-width:820px;border-radius:var(--radius);box-shadow:var(--shadow);transition:box-shadow .2s;overflow:hidden;margin:0}
+.node:hover{box-shadow:var(--shadow-lg)}
+.node-header{display:flex;align-items:center;gap:.6rem;padding:.7rem 1rem;cursor:pointer;user-select:none;font-weight:600;font-size:.92rem;border-bottom:1px solid transparent}
+.node-header .badge{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:.15rem .45rem;border-radius:3px;white-space:nowrap}
+.node-header .stations{font-family:var(--font-mono);font-size:.72rem;font-weight:500;color:var(--gray);background:#fff8;padding:.1rem .4rem;border-radius:3px;margin-left:.3rem;border:1px solid #fff5}
+.node-header .typesig{font-family:var(--font-mono);font-size:.7rem;font-weight:500;color:#6d28d9;background:#fff;padding:.1rem .4rem;border-radius:3px;margin-left:.3rem;border:1px solid #c4b5fd;white-space:nowrap}
+.node-header .typesig.cmp{color:#1d4ed8;border-color:#93c5fd}
+.node-header .typesig.cmb{color:#b91c1c;border-color:#fca5a5}
+.node-header .typesig.trb{color:#0f766e;border-color:#5eead4}
+.node-header .typesig.hx{color:#c2410c;border-color:#fdba74}
+.node-header .typesig.noz{color:#15803d;border-color:#86efac}
+.node-header .typesig.gry{color:#475569;border-color:#cbd5e1}
+.node-header .toggle{margin-left:auto;font-size:.75rem;opacity:.5;transition:transform .25s}
+.node-header .toggle.open{transform:rotate(90deg)}
+.node-body{display:none;padding:1rem 1.2rem 1.1rem;font-size:.85rem;line-height:1.7;border-top:1px solid rgba(0,0,0,.06);background:#fff}
+.node-body.show{display:block}
+.node-body p{margin-bottom:.6rem}
+.node-body .eq-block{background:#fafbfd;border-left:3px solid var(--blue);padding:.55rem .8rem;margin:.5rem 0;border-radius:0 var(--radius) var(--radius) 0;overflow-x:auto}
+.node-body .eq-block.green-eq{border-left-color:var(--green)}
+.node-body .eq-block.orange-eq{border-left-color:var(--orange)}
+.node-body .eq-block.teal-eq{border-left-color:var(--teal)}
+.node-body .eq-block.purple-eq{border-left-color:var(--purple)}
+.node-body .eq-block.red-eq{border-left-color:var(--red)}
+.node-body .eq-block.gray-eq{border-left-color:var(--gray)}
+.node-body .source-block{background:#1c2127;color:#e8e6df;font-family:var(--font-mono);font-size:.78rem;line-height:1.55;padding:.7rem .9rem;border-radius:6px;margin:.5rem 0;overflow-x:auto;white-space:pre}
+.node-body .source-block .ln{color:#7c8694;display:inline-block;width:2.4em;text-align:right;margin-right:.8em;user-select:none}
+.node-body .ref{font-size:.78rem;color:var(--gray);margin-top:.6rem}
+.node-body .ref a{color:var(--gray);text-decoration:underline;text-decoration-style:dotted}
+.node-body .ref a:hover{color:var(--blue)}
+.node-body code{font-family:var(--font-mono);font-size:.8rem;background:#eef2ff;padding:.1rem .35rem;border-radius:3px}
+.node-body ul{margin:.3rem 0 .5rem 1.2rem}
+.node-body li{margin-bottom:.2rem}
+.node-body .reads-writes{display:grid;grid-template-columns:auto 1fr;gap:.3rem 1rem;font-size:.8rem;background:#f8fafc;padding:.55rem .8rem;border-radius:6px;margin:.5rem 0}
+.node-body .reads-writes .rw-label{color:var(--gray);font-weight:600;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;padding-top:2px}
+
+.node-config{background:#fff;border:1.5px solid var(--gray-border)}
+.node-config .node-header{color:var(--gray)}
+.node-config .badge{background:var(--gray-light);color:var(--gray)}
+.node-blue{background:var(--blue-light);border:1.5px solid var(--blue-border)}
+.node-blue .node-header{color:var(--blue)}
+.node-blue .badge{background:#bfdbfe;color:#1d4ed8}
+.node-green{background:var(--green-light);border:1.5px solid var(--green-border)}
+.node-green .node-header{color:var(--green)}
+.node-green .badge{background:#bbf7d0;color:#15803d}
+.node-orange{background:var(--orange-light);border:1.5px solid var(--orange-border)}
+.node-orange .node-header{color:var(--orange)}
+.node-orange .badge{background:#fed7aa;color:#c2410c}
+.node-teal{background:var(--teal-light);border:1.5px solid var(--teal-border)}
+.node-teal .node-header{color:var(--teal)}
+.node-teal .badge{background:#99f6e4;color:#0f766e}
+.node-purple{background:var(--purple-light);border:1.5px solid var(--purple-border)}
+.node-purple .node-header{color:var(--purple)}
+.node-purple .badge{background:#c4b5fd;color:#6d28d9}
+.node-red{background:var(--red-light);border:1.5px solid var(--red-border)}
+.node-red .node-header{color:var(--red)}
+.node-red .badge{background:#fecaca;color:#b91c1c}
+.node-output{background:#fff;border:2px solid var(--purple-border)}
+.node-output .node-header{color:var(--purple)}
+.node-output .badge{background:var(--purple-light);color:var(--purple)}
+.node-decision{background:#fff;border:1.5px dashed var(--gray-border);max-width:600px}
+.node-decision .node-header{color:var(--gray);font-size:.85rem;cursor:default}
+.node-decision .node-header .toggle{display:none}
+.node-decision .node-body{display:block;border-top:none;padding:.4rem 1.2rem .8rem;font-size:.82rem;background:transparent}
+
+.loop-wrapper{width:100%;max-width:880px;border:2px dashed var(--blue-border);border-radius:12px;padding:1.2rem .9rem 1rem;position:relative;margin:0;background:linear-gradient(180deg,#eff6ff10 0%,transparent 80px)}
+.loop-label{position:absolute;top:-13px;left:24px;background:var(--bg);padding:.05rem .55rem;font-size:.78rem;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.05em}
+.loop-label .cond{font-family:var(--font-mono);text-transform:none;background:#fff;padding:.05rem .35rem;border-radius:3px;margin-left:.3rem;border:1px solid var(--blue-border);color:#1d4ed8}
+.loop-inner{display:flex;flex-direction:column;align-items:center;gap:0}
+.loop-feedback{font-size:.78rem;color:var(--blue);text-align:center;padding:.4rem 0;font-family:var(--font-mono)}
+
+.micro-wrapper{width:100%;max-width:830px;border:2px dashed var(--red-border);border-radius:12px;padding:1.2rem .7rem 1rem;position:relative;margin:0;background:linear-gradient(180deg,#fef2f210 0%,transparent 80px)}
+.micro-label{position:absolute;top:-13px;left:24px;background:var(--red-light);padding:.05rem .55rem;font-size:.75rem;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.05em;border:1px solid var(--red-border);border-radius:3px}
+.micro-inner{display:flex;flex-direction:column;align-items:center;gap:0}
+
+.sidebar-callout{width:100%;max-width:820px;margin:1.5rem auto 0;padding:1rem 1.2rem;background:#fff;border:1.5px solid var(--teal-border);border-left:5px solid var(--teal);border-radius:var(--radius);box-shadow:var(--shadow)}
+.sidebar-callout h3{font-size:.95rem;color:var(--teal);margin-bottom:.4rem;display:flex;align-items:center;gap:.4rem}
+.sidebar-callout h3 .badge{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:.15rem .45rem;border-radius:3px;background:var(--teal-light);color:var(--teal)}
+.sidebar-callout p{font-size:.85rem;margin-bottom:.5rem}
+.sidebar-callout ul{font-size:.85rem;margin:.3rem 0 .6rem 1.2rem}
+.sidebar-callout li{margin-bottom:.3rem}
+.sidebar-callout .eq-block{background:#fafbfd;border-left:3px solid var(--teal);padding:.5rem .8rem;margin:.5rem 0;border-radius:0 6px 6px 0;font-size:.85rem}
+.sidebar-callout .source-block{background:#1c2127;color:#e8e6df;font-family:var(--font-mono);font-size:.78rem;line-height:1.55;padding:.7rem .9rem;border-radius:6px;margin:.5rem 0;overflow-x:auto;white-space:pre}
+.sidebar-callout .source-block .ln{color:#7c8694;display:inline-block;width:2.4em;text-align:right;margin-right:.8em;user-select:none}
+.sidebar-callout code{font-family:var(--font-mono);font-size:.8rem;background:#eef2ff;padding:.1rem .35rem;border-radius:3px}
+.sidebar-callout .ref{font-size:.78rem;color:var(--gray);margin-top:.5rem}
+.sidebar-callout .ref a{color:var(--gray)}
+
+.station-schematic{margin:1.2rem 0 .5rem;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:.8rem}
+.station-schematic .schem-title{font-size:.85rem;font-weight:600;color:var(--fg);text-align:center;margin-bottom:.4rem}
+.station-schematic svg{display:block;margin:0 auto;max-width:100%}
+
+.types-detail{margin:.4rem 0 1rem;display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+@media(max-width:680px){.types-detail{grid-template-columns:1fr}}
+.type-card{background:#fff;border:1.5px solid var(--gray-border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.type-card.tc-state-purple{border-color:var(--purple-border);border-left:4px solid var(--purple)}
+.type-card.tc-state-blue{border-color:var(--blue-border);border-left:4px solid var(--blue)}
+.type-card.tc-state-green{border-color:var(--green-border);border-left:4px solid var(--green)}
+.type-card.tc-cmp-blue{border-color:var(--blue-border);border-left:4px solid var(--blue)}
+.type-card.tc-cmb-red{border-color:var(--red-border);border-left:4px solid var(--red)}
+.type-card.tc-trb-teal{border-color:var(--teal-border);border-left:4px solid var(--teal)}
+.type-card.tc-noz-green{border-color:var(--green-border);border-left:4px solid var(--green)}
+.type-card.tc-inl-green{border-color:var(--green-border);border-left:4px solid var(--green)}
+.type-card.tc-shf-gray{border-color:var(--gray-border);border-left:4px solid var(--gray)}
+.type-card.tc-hx-orange{border-color:var(--orange-border);border-left:4px solid var(--orange)}
+.type-header{display:flex;align-items:center;gap:.5rem;padding:.55rem .8rem;cursor:pointer;user-select:none;font-size:.84rem;font-weight:600}
+.type-header .type-badge{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:.1rem .4rem;border-radius:3px;white-space:nowrap}
+.type-header .type-badge.state-b{background:var(--purple-light);color:var(--purple)}
+.type-header .type-badge.cmp-b{background:#bfdbfe;color:#1d4ed8}
+.type-header .type-badge.cmb-b{background:#fecaca;color:#b91c1c}
+.type-header .type-badge.trb-b{background:#99f6e4;color:#0f766e}
+.type-header .type-badge.noz-b{background:#bbf7d0;color:#15803d}
+.type-header .type-badge.inl-b{background:#bbf7d0;color:#15803d}
+.type-header .type-badge.shf-b{background:var(--gray-light);color:var(--gray)}
+.type-header .type-badge.hx-b{background:#fed7aa;color:#c2410c}
+.type-header .type-name{font-family:var(--font-mono);color:var(--fg)}
+.type-header .type-meta{margin-left:auto;font-size:.7rem;font-weight:400;color:var(--gray)}
+.type-header .type-toggle{font-size:.7rem;opacity:.5;transition:transform .25s}
+.type-header .type-toggle.open{transform:rotate(90deg)}
+.type-body{display:none;padding:.6rem .9rem .8rem;font-size:.8rem;line-height:1.6;border-top:1px solid rgba(0,0,0,.06);background:#fafbfd}
+.type-body.show{display:block}
+.type-body p{margin-bottom:.4rem}
+.type-body .type-section{margin-top:.5rem;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--gray);font-weight:700}
+.type-body .field-list{font-family:var(--font-mono);font-size:.74rem;line-height:1.55;color:#374151;background:#fff;padding:.4rem .6rem;border-radius:4px;border:1px solid #e5e7eb;white-space:pre;overflow-x:auto;margin:.25rem 0}
+.type-body code{font-family:var(--font-mono);font-size:.75rem;background:#eef2ff;padding:.05rem .3rem;border-radius:3px}
+.type-body .ref{font-size:.72rem;color:var(--gray);margin-top:.4rem}
+.type-body .ref a{color:var(--gray);text-decoration:underline;text-decoration-style:dotted}
+
+/* TOC rail */
+.toc-rail{position:fixed;top:1rem;left:1rem;width:230px;max-height:calc(100vh - 2rem);overflow-y:auto;background:#fff;border:1px solid var(--gray-border);border-radius:var(--radius);box-shadow:var(--shadow);padding:.8rem .7rem;font-size:.74rem;line-height:1.4;z-index:10;transform:translateX(-115%);opacity:0;pointer-events:none;transition:transform .18s ease,opacity .18s ease}
+.toc-rail.open{transform:translateX(0);opacity:1;pointer-events:auto}
+.toc-toggle{position:fixed;top:1rem;left:1rem;width:36px;height:36px;background:#fff;border:1px solid var(--gray-border);border-radius:6px;box-shadow:var(--shadow);cursor:pointer;z-index:11;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--gray);padding:0;transition:left .18s ease,color .15s ease,border-color .15s ease,box-shadow .15s ease}
+.toc-toggle::before{content:'☰';line-height:1;font-weight:600}
+.toc-toggle.open{left:calc(1rem + 230px + .4rem);color:var(--blue);border-color:var(--blue-border)}
+.toc-toggle.open::before{content:'✕';font-size:13px}
+.toc-toggle:hover{color:var(--blue);border-color:var(--blue);box-shadow:var(--shadow-lg)}
+.toc-toggle:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+@media print{.toc-toggle{display:none}}
+.toc-rail .toc-title{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--gray);font-weight:700;margin:0 0 .2rem;padding:0 .35rem}
+.toc-rail .toc-section{margin-top:.6rem;padding-top:.5rem;border-top:1px solid var(--gray-border)}
+.toc-rail .toc-section:first-of-type{margin-top:0;padding-top:0;border-top:none}
+.toc-rail .toc-section-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--gray);font-weight:700;margin:0 0 .25rem;padding:0 .35rem;display:flex;align-items:center;gap:.3rem}
+.toc-rail .toc-section-label .toc-badge{font-size:.55rem;background:var(--gray-light);color:var(--gray);padding:.05rem .3rem;border-radius:2px;font-weight:600}
+.toc-rail ul{list-style:none;margin:0;padding:0}
+.toc-rail li{margin:0}
+.toc-rail a{display:block;color:var(--fg);text-decoration:none;padding:.18rem .45rem;border-radius:3px;border-left:2px solid transparent;transition:background .1s,color .1s,border-color .1s;font-size:.72rem}
+.toc-rail a:hover{background:var(--gray-light);color:var(--blue)}
+.toc-rail a.active{background:var(--blue-light);color:var(--blue);border-left-color:var(--blue);font-weight:600}
+.toc-rail a .toc-marker{display:inline-block;width:.6rem;color:var(--gray);font-family:var(--font-mono);font-size:.62rem;margin-right:.15rem}
+.toc-rail .toc-loop{margin:.3rem 0 .15rem;font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;color:var(--blue);font-weight:700;padding:.15rem .35rem;background:#eff6ff;border-left:2px solid var(--blue);border-radius:0 3px 3px 0}
+.toc-rail .toc-micro{margin:.25rem 0 .1rem;font-size:.64rem;text-transform:uppercase;letter-spacing:.05em;color:var(--red);font-weight:700;padding:.1rem .35rem;background:#fef2f2;border-left:2px solid var(--red);border-radius:0 3px 3px 0}
+.toc-rail .toc-nested{padding-left:.9rem;border-left:1px dashed var(--gray-border);margin-left:.4rem}
+.toc-rail .toc-nested-2{padding-left:.7rem;border-left:1px dashed var(--red-border);margin-left:.4rem}
+.toc-rail::-webkit-scrollbar{width:6px}
+.toc-rail::-webkit-scrollbar-thumb{background:var(--gray-border);border-radius:3px}
+@media print{.toc-rail{display:none}}
+
+@media(max-width:680px){
+  .header{padding:1.5rem 1rem}
+  .header h1{font-size:1.4rem}
+  .container{padding:1rem .8rem 2rem}
+  .node-header{font-size:.84rem;padding:.6rem .7rem}
+  .node-body{padding:.8rem .7rem}
+}
+@media print{
+  .header{break-after:avoid}
+  .node-body{display:block!important}
+  .toggle{display:none}
+  .loop-wrapper,.micro-wrapper{page-break-inside:avoid}
+  body{font-size:11pt}
+}
+</style>
+</head>
+<body>
+
+<button class="toc-toggle" type="button"
+        aria-label="Toggle walkthrough navigation"
+        aria-controls="toc-rail"
+        aria-expanded="false"></button>
+
+<nav class="toc-rail" id="toc-rail" aria-label="Walkthrough navigation">
+  <div class="toc-title">Walkthrough</div>
+
+  <div class="toc-section">
+    <div class="toc-section-label">Types &amp; wrappers <span class="toc-badge">9</span></div>
+    <ul>
+      <li><a href="#type-metdata" data-toggle="type-metdata">MetData (ABC)</a></li>
+      <li><a href="#type-atmdata" data-toggle="type-atmdata">AtmData</a></li>
+      <li><a href="#type-sfcdata" data-toggle="type-sfcdata">SfcData</a></li>
+      <li><a href="#type-ecmwfatm" data-toggle="type-ecmwfatm">ECMWFAtmData</a></li>
+      <li><a href="#type-variable" data-toggle="type-variable">Variable</a></li>
+      <li><a href="#type-registry" data-toggle="type-registry">CRTMMetInputs</a></li>
+      <li><a href="#type-effr" data-toggle="type-effr">EffectiveRadius</a></li>
+      <li><a href="#type-absorber" data-toggle="type-absorber">AbsorberData</a></li>
+      <li><a href="#type-land" data-toggle="type-land">LandClassData</a></li>
+    </ul>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-label">ECMWF main path</div>
+    <ul>
+      <li><a href="#node-entry" data-toggle="entry"><span class="toc-marker">▸</span>Entry &amp; validate</a></li>
+      <li><a href="#node-order" data-toggle="order"><span class="toc-marker">▸</span>Enforce (profile, vertical)</a></li>
+      <li><a href="#node-compat" data-toggle="compat"><span class="toc-marker">▸</span>Scheme compatibility</a></li>
+      <li><a href="#node-coords" data-toggle="coords"><span class="toc-marker">▸</span>Coords + flip P-axis</a></li>
+    </ul>
+    <div class="toc-micro">▸ add_land_info</div>
+    <div class="toc-nested-2">
+      <ul>
+        <li><a href="#node-landclass" data-toggle="landclass">Land-class lookup</a></li>
+        <li><a href="#node-cover" data-toggle="cover">Coverage fractions</a></li>
+        <li><a href="#node-snowrec" data-toggle="snowrec">Snow reconcile</a></li>
+        <li><a href="#node-cleanupcov" data-toggle="cleanupcov">Clean + write covers</a></li>
+      </ul>
+    </div>
+    <ul>
+      <li><a href="#node-time" data-toggle="time"><span class="toc-marker">▸</span>add_time_info</a></li>
+      <li><a href="#node-absorber" data-toggle="absorber"><span class="toc-marker">▸</span>add_absorber_data</a></li>
+    </ul>
+    <div class="toc-loop">↻ atm variable loop</div>
+    <div class="toc-nested">
+      <ul>
+        <li><a href="#node-convert" data-toggle="convert">convert_units dispatch</a></li>
+      </ul>
+      <div class="toc-micro">▸ effective radius</div>
+      <div class="toc-nested-2">
+        <ul>
+          <li><a href="#node-ice" data-toggle="ice">Ice r_eff</a></li>
+          <li><a href="#node-liquid" data-toggle="liquid">Liquid r_eff</a></li>
+          <li><a href="#node-rainsnow" data-toggle="rainsnow">Rain / snow r_eff</a></li>
+        </ul>
+      </div>
+      <ul>
+        <li><a href="#node-write-atm" data-toggle="write-atm">Cast, flip, write</a></li>
+      </ul>
+    </div>
+    <ul>
+      <li><a href="#node-radii-attrs" data-toggle="radii-attrs"><span class="toc-marker">▸</span>Store scheme attrs</a></li>
+    </ul>
+    <div class="toc-loop">↻ sfc variable loop</div>
+    <div class="toc-nested">
+      <ul>
+        <li><a href="#node-sfc-convert" data-toggle="sfc-convert">Surface convert_units</a></li>
+      </ul>
+    </div>
+    <ul>
+      <li><a href="#node-cleanclouds" data-toggle="cleanclouds"><span class="toc-marker">▸</span>cleanup_cloudvars</a></li>
+      <li><a href="#node-return" data-toggle="return"><span class="toc-marker">▸</span>return ds</a></li>
+    </ul>
+  </div>
+
+  <div class="toc-section">
+    <div class="toc-section-label">Alt source</div>
+    <ul>
+      <li><a href="#sidebar-hrrr">HRRR model-level path</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="header">
+  <h1>make_crtm_input — NWP weather → CRTM driver input</h1>
+  <p class="subtitle">A walkthrough of the call stack and physics inside <code>crtm_inputs.make_crtm_input()</code>: it assembles one canonical <code>xr.Dataset</code> from atmospheric, surface, and land wrappers — flipping the pressure axis, deriving land/snow/ice cover, interpolating well-mixed gases, and looping over the variable registry to unit-convert each field and parametrize cloud-particle radii.</p>
+  <p class="meta">branch <a href="https://github.mit.edu/lrobion/crtm-experiments/tree/batch-stream-crtm-inputs">batch-stream-crtm-inputs</a> @ <a href="https://github.mit.edu/lrobion/crtm-experiments/commit/db2ca7bde7555eb3873c1016f25725bd43995715">db2ca7b</a> · ECMWF (pressure-level) main path · HRRR quirks in sidebar</p>
+</div>
+
+<div class="container">
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-swatch sw-gray"></span>Setup / config / time</div>
+  <div class="legend-item"><span class="legend-swatch sw-green"></span>Geometric / dimension setup</div>
+  <div class="legend-item"><span class="legend-swatch sw-blue"></span>Unit conversion / dispatch</div>
+  <div class="legend-item"><span class="legend-swatch sw-red"></span>Cloud-particle microphysics</div>
+  <div class="legend-item"><span class="legend-swatch sw-teal"></span>Land / surface coverage</div>
+  <div class="legend-item"><span class="legend-swatch sw-orange"></span>Optional / fail-fast guard</div>
+  <div class="legend-item"><span class="legend-swatch sw-purple"></span>Write-back / output</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TYPES PANEL                                                   -->
+<!-- ============================================================ -->
+<div class="station-schematic">
+  <div class="schem-title">Type layer — <code>make_crtm_input</code> is source-agnostic; it speaks to the <code>MetData</code> hierarchy and the <code>Variable</code> contract</div>
+  <svg viewBox="0 0 960 470" width="960" height="470" font-family="'JetBrains Mono',monospace">
+    <!-- divider -->
+    <line x1="480" y1="20" x2="480" y2="450" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="240" y="34" text-anchor="middle" font-size="13" font-weight="700" fill="#7c3aed">WHAT FLOWS — the data contract</text>
+    <text x="720" y="34" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">WHAT ACTS — wrappers &amp; physics</text>
+
+    <!-- LEFT: output dataset -->
+    <rect x="40" y="50" width="400" height="118" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+    <text x="56" y="70" font-size="12" font-weight="700" fill="#6d28d9">xr.Dataset  ds  (the built CRTM input)</text>
+    <text x="56" y="90" font-size="10.5" fill="#4c1d95">coords: profile · layer(1..N) · level(0..N)</text>
+    <text x="56" y="106" font-size="10.5" fill="#4c1d95">atm: t q o3 cfrac ciwc clwc crwc cswc</text>
+    <text x="56" y="121" font-size="10.5" fill="#4c1d95">     ciwc_radius clwc_radius crwc_radius cswc_radius</text>
+    <text x="56" y="136" font-size="10.5" fill="#4c1d95">sfc: land_temperature wind_speed water_temperature ...</text>
+    <text x="56" y="151" font-size="10.5" fill="#4c1d95">land: land_type land_cov water_cov snow_cov ice_cov</text>
+    <text x="56" y="164" font-size="9.5" fill="#7c3aed">written float32 / int32, P-axis flipped (surface = last)</text>
+
+    <!-- composes arrow -->
+    <line x1="240" y1="168" x2="240" y2="196" stroke="#94a3b8" stroke-width="1.5"/>
+    <polygon points="234,196 246,196 240,205 " fill="#94a3b8"/>
+    <text x="252" y="188" font-size="9.5" fill="#64748b">built from contract</text>
+
+    <!-- Variable dataclass -->
+    <rect x="40" y="208" width="400" height="120" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+    <text x="56" y="228" font-size="12" font-weight="700" fill="#475569">@dataclass Variable  (one per CRTM field)</text>
+    <text x="56" y="247" font-size="10.5" fill="#334155">crtm_name: str</text>
+    <text x="56" y="262" font-size="10.5" fill="#334155">crtm_units: str</text>
+    <text x="56" y="277" font-size="10.5" fill="#334155">crtm_dims: list[str]</text>
+    <text x="56" y="292" font-size="10.5" fill="#334155">description: str</text>
+    <text x="56" y="307" font-size="10.5" fill="#334155">ecmwf_varname: str | list[str] | None</text>
+    <text x="56" y="322" font-size="10.5" fill="#334155">hrrr_varname:  str | list[str] | None</text>
+
+    <!-- CRTMMetInputs -->
+    <rect x="40" y="346" width="400" height="92" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+    <text x="56" y="366" font-size="12" font-weight="700" fill="#475569">@dataclass CRTMMetInputs  (the registry)</text>
+    <text x="56" y="385" font-size="10.5" fill="#334155">atm:  dict[str, Variable]   ← looped first</text>
+    <text x="56" y="400" font-size="10.5" fill="#334155">sfc:  dict[str, Variable]   ← looped second</text>
+    <text x="56" y="415" font-size="10.5" fill="#334155">land: dict[str, Variable]   ← SnowCover</text>
+    <text x="56" y="431" font-size="9.5" fill="#64748b">CRTM_MET_INPUTS = make_crtm_met_inputs()</text>
+
+    <!-- RIGHT: MetData hierarchy -->
+    <rect x="520" y="50" width="400" height="40" rx="7" fill="#fff" stroke="#64748b" stroke-width="1.5"/>
+    <text x="536" y="68" font-size="11.5" font-weight="700" fill="#475569">MetData (ABC)</text>
+    <text x="536" y="83" font-size="9.5" fill="#64748b">get_var · make_crtm_var · convert_units* · from_nwp_data</text>
+
+    <line x1="560" y1="90" x2="560" y2="108" stroke="#94a3b8" stroke-width="1.4"/>
+    <polygon points="554,108 566,108 560,116" fill="#94a3b8"/>
+
+    <rect x="520" y="118" width="195" height="46" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="534" y="136" font-size="11" font-weight="700" fill="#1d4ed8">AtmData</text>
+    <text x="534" y="151" font-size="9" fill="#1e40af">p_layers p_levels q_dry effr_params</text>
+    <text x="534" y="161" font-size="9" fill="#1e40af">p_layers_grid · p_levels_grid</text>
+
+    <rect x="725" y="118" width="195" height="46" rx="7" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5"/>
+    <text x="739" y="136" font-size="11" font-weight="700" fill="#0f766e">SfcData</text>
+    <text x="739" y="151" font-size="9" fill="#115e59">surface (profile,) fields only</text>
+    <text x="739" y="161" font-size="9" fill="#115e59">convert_units per source</text>
+
+    <rect x="520" y="176" width="195" height="42" rx="7" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="2"/>
+    <text x="534" y="193" font-size="10.5" font-weight="700" fill="#1d4ed8">ECMWFAtmData  ◀ main path</text>
+    <text x="534" y="208" font-size="9" fill="#1e3a8a">pressure-level · q_dry from spec. conc.</text>
+
+    <rect x="725" y="176" width="195" height="42" rx="7" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+    <text x="739" y="193" font-size="10.5" font-weight="700" fill="#2563eb">HRRRAtmData</text>
+    <text x="739" y="208" font-size="9" fill="#3b82f6">model-level · 2-D P · no O3 (sidebar)</text>
+
+    <!-- physics components -->
+    <rect x="520" y="240" width="400" height="58" rx="7" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5"/>
+    <text x="536" y="259" font-size="11.5" font-weight="700" fill="#b91c1c">EffectiveRadius   (cloud microphysics)</text>
+    <text x="536" y="276" font-size="9.5" fill="#7f1d1d">ice/liquid/rain/snow_scheme · specie2scheme</text>
+    <text x="536" y="290" font-size="9.5" fill="#7f1d1d">compute_{ice,liquid,rain,snow}_reff · validate_compatibility</text>
+
+    <rect x="520" y="310" width="400" height="50" rx="7" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/>
+    <text x="536" y="329" font-size="11.5" font-weight="700" fill="#c2410c">AbsorberData   (well-mixed gases)</text>
+    <text x="536" y="346" font-size="9.5" fill="#9a3412">data (US-std-atmos CSV) · get_absorber_profile → np.interp</text>
+
+    <rect x="520" y="372" width="400" height="50" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="536" y="391" font-size="11.5" font-weight="700" fill="#15803d">LandClassData → IGBPLandClassData   (land)</text>
+    <text x="536" y="408" font-size="9.5" fill="#166534">get_crtm_landclass · get_{water,snow,ice}_cover (CRS lookup)</text>
+
+    <text x="520" y="442" font-size="9.5" fill="#64748b">A node tagged <tspan font-weight="700" fill="#1d4ed8">::ECMWFAtmData</tspan> is the concrete subclass <tspan font-style="italic">make_crtm_var</tspan> dispatches to;</text>
+    <text x="520" y="455" font-size="9.5" fill="#64748b">HRRR data flows through <tspan font-weight="700" fill="#2563eb">HRRRAtmData</tspan> instead — same signatures, different physics.</text>
+  </svg>
+</div>
+
+<div class="types-detail">
+
+  <div class="type-card tc-state-blue" id="type-metdata">
+    <div class="type-header" onclick="toggle('type-metdata')">
+      <span class="type-badge cmp-b">Base / ABC</span>
+      <span class="type-name">MetData</span>
+      <span class="type-meta">abstract</span>
+      <span class="type-toggle" id="toggle-type-metdata">&#9654;</span>
+    </div>
+    <div class="type-body" id="body-type-metdata">
+      <p>Abstract wrapper around one NWP <code>xr.Dataset</code> plus its <code>MetDataSource</code>. Provides the source-agnostic surface <code>make_crtm_var</code> calls; concrete subclasses supply <code>convert_units</code> and <code>n_profiles</code>.</p>
+      <div class="type-section">Fields</div>
+      <pre class="field-list">time_axis: str
+self.met_source: MetDataSource
+self.ds: xr.Dataset</pre>
+      <div class="type-section">Methods</div>
+      <pre class="field-list">get_var(crtm_var) -> xr.DataArray
+make_crtm_var(crtm_varname) -> (Variable, ndarray)
+convert_units(var) -> ndarray        # abstract
+from_nwp_data(model_type, is_atmo, ...) # factory
+_metdata_factory(model_type, is_atmo)</pre>
+      <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/metdata.py#L16-L169">met/metdata.py:L16-L169</a></p>
+    </div>
+  </div>
+
+  <div class="type-card tc-state-blue" id="type-atmdata">
+    <div class="type-header" onclick="toggle('type-atmdata')">
+      <span class="type-badge cmp-b">Sub-state</span>
+      <span class="type-name">AtmData</span>
+      <span class="type-meta">extends MetData</span>
+      <span class="type-toggle" id="toggle-type-atmdata">&#9654;</span>
+    </div>
+    <div class="type-body" id="body-type-atmdata">
+      <p>Atmospheric wrapper. Adds the vertical pressure axis, the per-profile pressure grids, and the cloud-radius scheme handle that <code>make_crtm_input</code> sets before the variable loop.</p>
+      <div class="type-section">Fields</div>
+      <pre class="field-list">vertical_axis: str
+p_axis: str
+p_layers: np.ndarray     # layer centres
+p_levels: np.ndarray     # cell edges (N+1)
+is_land: None | np.ndarray
+effr_params: None | EffectiveRadius</pre>
+      <div class="type-section">Methods</div>
+      <pre class="field-list">enforce_profile_vertical_order()
+n_p_layers / n_p_levels  (property)
+p_layers_grid / p_levels_grid  (property)  # broadcast to (n_profiles, n)</pre>
+      <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/metdata.py#L172-L246">met/metdata.py:L172-L246</a></p>
+    </div>
+  </div>
+
+  <div class="type-card tc-state-green" id="type-sfcdata">
+    <div class="type-header" onclick="toggle('type-sfcdata')">
+      <span class="type-badge noz-b">Sub-state</span>
+      <span class="type-name">SfcData</span>
+      <span class="type-meta">extends MetData</span>
+      <span class="type-toggle" id="toggle-type-sfcdata">&#9654;</span>
+    </div>
+    <div class="type-body" id="body-type-sfcdata">
+      <p>Surface wrapper — all variables are <code>(profile,)</code>. Thin: it just inherits the <code>MetData</code> surface and lets each source subclass implement <code>convert_units</code> for skin/sea/snow fields.</p>
+      <div class="type-section">Fields</div>
+      <pre class="field-list">(inherited: met_source, ds, time_axis)</pre>
+      <div class="type-section">Subclasses</div>
+      <pre class="field-list">ECMWFSfcData   # main path
+HRRRSfcData    # wind_data appended from atm (sidebar)</pre>
+      <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/metdata.py#L249-L251">met/metdata.py:L249-L251</a></p>
+    </div>
+  </div>
+
+  <div class="type-card tc-cmp-blue" id="type-ecmwfatm">
+    <div class="type-header" onclick="toggle('type-ecmwfatm')">
+      <span class="type-badge cmp-b">Component</span>
+      <span class="type-name">ECMWFAtmData</span>
+      <span class="type-meta">main path · extends AtmData</span>
+      <span class="type-toggle" id="toggle-type-ecmwfatm">&#9654;</span>
+    </div>
+    <div class="type-body" id="body-type-ecmwfatm">
+      <p>The concrete pressure-level wrapper this walkthrough follows. On construction it resolves the (renamed-over-time) pressure/time axes, builds <code>p_levels</code> from layer midpoints, and computes <code>q_dry</code> so specific concentrations can be turned into mass-mixing ratios.</p>
+      <div class="type-section">Constructor-set fields</div>
+      <pre class="field-list">time_axis, p_axis, vertical_axis
+q_dry = 1 - q - ciwc - clwc - crwc - cswc</pre>
+      <div class="type-section">Key method</div>
+      <pre class="field-list">convert_units(var)  # match var: per-field physics
+                    # (Ozone, Q, CIWC.., cfrac, T, 4×radius)</pre>
+      <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/ecmwf.py#L48-L274">met/ecmwf.py:L48-L274</a></p>
+    </div>
+  </div>
+
+  <div class="type-card tc-shf-gray" id="type-variable">
+    <div class="type-header" onclick="toggle('type-variable')">
+      <span class="type-badge shf-b">Contract</span>
+      <span class="type-name">Variable</span>
+      <span class="type-meta">@dataclass</span>
+      <span class="type-toggle" id="toggle-type-variable">&#9654;</span>
+    </div>
+    <div class="type-body" id="body-type-variable">
+      <p>The bridge between sources: one <code>Variable</code> ties a CRTM name/units/dims to its per-source short name. <code>varname(met_source)</code> returns the ECMWF or HRRR key (or raises if the field doesn't exist there).</p>
+      <div class="type-section">Fields (verbatim)</div>
+      <pre class="field-list">crtm_name: str
+crtm_units: str
+crtm_dims: list[str]
+description: str
+ecmwf_varname: str | list[str] | None
+hrrr_varname: str | list[str] | None</pre>
+      <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/variables.py#L14-L65">met/variables.py:L14-L65</a></p>
+    </div>
+  </div>
+
+  <div class="type-card tc-shf-gray" id="type-registry">
+    <div class="type-header" onclick="toggle('type-registry')">
+      <span class="type-badge shf-b">Registry</span>
+      <span class="type-name">CRTMMetInputs</span>
+      <span class="type-meta">@dataclass · CRTM_MET_INPUTS</span>
+      <span class="type-toggle" id="toggle-type-registry">&#9654;</span>
+    </div>
+    <div class="type-body" id="body-type-registry">
+      <p>The three ordered dicts the two flow loops iterate over. <code>get(crtm_varname)</code> searches atm → sfc → land. The module-level singleton <code>CRTM_MET_INPUTS</code> is built once at import.</p>
+      <div class="type-section">Fields</div>
+      <pre class="field-list">atm:  dict[str, Variable]   # 12 fields (incl. 4 radii)
+sfc:  dict[str, Variable]   # 6 fields
+land: dict[str, Variable]   # SnowCover</pre>
+      <div class="type-section">Method</div>
+      <pre class="field-list">get(crtm_varname) -> Variable</pre>
+      <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/variables.py#L68-L84">met/variables.py:L68-L84</a></p>
+    </div>
+  </div>
+
+  <div class="type-card tc-cmb-red" id="type-effr">
+    <div class="type-header" onclick="toggle('type-effr')">
+      <span class="type-badge cmb-b">Physics</span>
+      <span class="type-name">EffectiveRadius</span>
+      <span class="type-meta">cloud microphysics</span>
+      <span class="type-toggle" id="toggle-type-effr">&#9654;</span>
+    </div>
+    <div class="type-body" id="body-type-effr">
+      <p>Holds the per-species scheme choice and dispatches the four <code>compute_*_reff</code> methods. Defaults: ECMWF ice/rain/snow + Bower liquid. <code>validate_compatibility</code> fails fast if a scheme needs particle number concentrations a source doesn't provide.</p>
+      <div class="type-section">Fields</div>
+      <pre class="field-list">ice_scheme / liquid_scheme / rain_scheme / snow_scheme
+specie2scheme: {Specie -> scheme_str}</pre>
+      <div class="type-section">Methods</div>
+      <pre class="field-list">compute_ice_reff / compute_liquid_reff
+compute_rain_reff / compute_snow_reff
+validate_compatibility(met_source, ds=None)</pre>
+      <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/effr.py#L52-L454">met/effr.py:L52-L454</a></p>
+    </div>
+  </div>
+
+  <div class="type-card tc-hx-orange" id="type-absorber">
+    <div class="type-header" onclick="toggle('type-absorber')">
+      <span class="type-badge hx-b">Component</span>
+      <span class="type-name">AbsorberData</span>
+      <span class="type-meta">well-mixed gases</span>
+      <span class="type-toggle" id="toggle-type-absorber">&#9654;</span>
+    </div>
+    <div class="type-body" id="body-type-absorber">
+      <p>Wraps the US-standard-atmosphere CSV of well-mixed gas profiles. <code>get_absorber_profile</code> linearly interpolates a gas column onto the target pressure layers (1-D for pressure-level data, 2-D for model levels).</p>
+      <div class="type-section">Fields</div>
+      <pre class="field-list">self.data: pd.DataFrame   # us-std-atmos-101.csv
+self.path: str</pre>
+      <div class="type-section">Methods</div>
+      <pre class="field-list">get_absorber_profile(absorber, target_layers)
+_itp_1D_pressures / _itp_2D_pressures  # np.interp</pre>
+      <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/absorbers.py#L15-L100">absorbers.py:L15-L100</a></p>
+    </div>
+  </div>
+
+  <div class="type-card tc-inl-green" id="type-land">
+    <div class="type-header" onclick="toggle('type-land')">
+      <span class="type-badge inl-b">Component</span>
+      <span class="type-name">LandClassData</span>
+      <span class="type-meta">ABC → IGBPLandClassData</span>
+      <span class="type-toggle" id="toggle-type-land">&#9654;</span>
+    </div>
+    <div class="type-body" id="body-type-land">
+      <p>Abstract land wrapper. For each profile lat/lon it finds the nearest grid cell (via a CRS transform or nearest-neighbour) and returns the IGBP class plus water/snow/ice cover fractions.</p>
+      <div class="type-section">Fields</div>
+      <pre class="field-list">landclass_varname: str
+self.ds, self.land_source: LandClassType
+self.use_crs: bool, self.use_snow_class: bool
+self.latlon2crs (Transformer, when use_crs)</pre>
+      <div class="type-section">Methods</div>
+      <pre class="field-list">get_crtm_landclass(lat, lon)
+get_water_cover / get_snow_cover / get_ice_cover  # abstract
+get_idx_in_ds(lat, lon)</pre>
+      <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/land/landdata.py#L17-L252">land/landdata.py:L17-L252</a></p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- FLOW                                                          -->
+<!-- ============================================================ -->
+<div class="flow">
+
+<!-- ENTRY -->
+<div class="node node-config" id="node-entry">
+  <div class="node-header" onclick="toggle('entry')">
+    <span class="badge">Entry</span>
+    make_crtm_input(ds_atm, ds_sfc, ds_land, …) — sizes, NaN check, defaults
+    <span class="toggle" id="toggle-entry">&#9654;</span>
+  </div>
+  <div class="node-body" id="body-entry">
+    <p>Top-level orchestrator. Takes three wrappers (atmospheric, surface, land) plus optional absorber / effective-radius / coordinate overrides, and returns one <code>xr.Dataset</code> in CRTM-driver layout. First it reads the profile/level counts, warns on any NaNs in the inputs, and fills in default <code>AbsorberData</code> / <code>EffectiveRadius</code> if not supplied.</p>
+<pre class="source-block"><span class="ln">L31</span>def make_crtm_input(
+<span class="ln">L32</span>    ds_atm: AtmData,
+<span class="ln">L33</span>    ds_sfc: SfcData,
+<span class="ln">L34</span>    ds_land: LandClassData,
+<span class="ln">L35</span>    *,
+<span class="ln">L36</span>    absorber_data: Optional[AbsorberData] = None,
+<span class="ln">L37</span>    effr_params: Optional[EffectiveRadius] = None,
+<span class="ln">L38</span>    xy_coords: Optional[np.ndarray] = None,
+<span class="ln">L39</span>):</pre>
+<pre class="source-block"><span class="ln">L101</span>    n_p_levels = ds_atm.n_p_levels
+<span class="ln">L102</span>    n_profiles = ds_atm.n_profiles
+<span class="ln">L106</span>    validate_input(ds_atm.ds, msg="[AtmData]")
+<span class="ln">L107</span>    validate_input(ds_sfc.ds, msg="[SfcData]")
+<span class="ln">L114</span>    if absorber_data is None:
+<span class="ln">L115</span>        absorber_data = AbsorberData()
+<span class="ln">L117</span>    if effr_params is None:
+<span class="ln">L118</span>        effr_params = EffectiveRadius()</pre>
+    <p><code>validate_input</code> does not raise — it only <em>prints</em> a warning for any coordinate or data variable that contains NaNs, leaving the actual failure to CRTM downstream.</p>
+    <div class="reads-writes">
+      <span class="rw-label">Reads</span>  <span><code>ds_atm.n_p_levels</code> <code>ds_atm.n_profiles</code> <code>ds_atm.ds</code> <code>ds_sfc.ds</code></span>
+      <span class="rw-label">Writes</span> <span><code>n_p_levels</code> <code>n_profiles</code> <code>absorber_data</code> <code>effr_params</code></span>
+    </div>
+    <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/crtm_inputs.py#L31-L118">crtm_inputs.py:L31-L118</a> &nbsp;|&nbsp; <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/utils.py#L49-L73">utils.py:L49-L73</a></p>
+  </div>
+</div>
+
+<div class="arrow"><svg width="2" height="28"><line x1="1" y1="0" x2="1" y2="28" stroke="var(--arrow)" stroke-width="2"/></svg><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+<!-- ENFORCE ORDER -->
+<div class="node node-green" id="node-order">
+  <div class="node-header" onclick="toggle('order')">
+    <span class="badge">Layout</span>
+    Enforce (profile, vertical) dimension order
+    <span class="typesig cmp">::AtmData</span>
+    <span class="toggle" id="toggle-order">&#9654;</span>
+  </div>
+  <div class="node-body" id="body-order">
+    <p>The pressure-axis flip and all the broadcasting downstream assume atmospheric data is laid out as <code>(profile, vertical, …)</code>. The interpolation/unravel paths don't always produce that order, so this transpose makes it explicit. Idempotent — re-ordering an already-correct dataset is a no-op — and it raises early with a clear message if the <code>profile</code> or vertical dim is missing.</p>
+<pre class="source-block"><span class="ln">L112</span>    ds_atm.enforce_profile_vertical_order()</pre>
+<pre class="source-block"><span class="ln">L206</span>        self.ds = self.ds.transpose(PROFILE_VARNAME, self.vertical_axis, ...)</pre>
+    <div class="reads-writes">
+      <span class="rw-label">Reads</span>  <span><code>ds_atm.ds.dims</code> <code>self.vertical_axis</code></span>
+      <span class="rw-label">Writes</span> <span><code>ds_atm.ds</code> (transposed)</span>
+    </div>
+    <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/metdata.py#L183-L206">met/metdata.py:L183-L206</a></p>
+  </div>
+</div>
+
+<div class="arrow"><svg width="2" height="28"><line x1="1" y1="0" x2="1" y2="28" stroke="var(--arrow)" stroke-width="2"/></svg><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+<!-- COMPAT -->
+<div class="node node-orange" id="node-compat">
+  <div class="node-header" onclick="toggle('compat')">
+    <span class="badge">Guard</span>
+    Fail fast: scheme ↔ NWP-source compatibility
+    <span class="typesig cmb">::EffectiveRadius</span>
+    <span class="toggle" id="toggle-compat">&#9654;</span>
+  </div>
+  <div class="node-body" id="body-compat">
+    <p>Before any expensive per-variable computation, each selected per-species scheme is checked against a hand-written table. The deciding factor is whether a scheme needs particle <em>number</em> concentrations: the Thompson schemes do (and ERA5/ECMWF doesn't provide them), so they're HRRR-only. Passing <code>ds</code> also confirms every variable each radius parametrization reads actually resolves — catching a mislabeled dataset (HRRR data passed as ECMWF).</p>
+<pre class="source-block"><span class="ln">L123</span>    effr_params.validate_compatibility(ds_atm.met_source, ds_atm.ds)</pre>
+<pre class="source-block"><span class="ln">L149</span>        for specie, scheme in self.specie2scheme.items():
+<span class="ln">L150</span>            compatible = SCHEME_COMPATIBLE_SOURCES[scheme]
+<span class="ln">L151</span>            if source not in compatible:</pre>
+    <p>Also sets <code>ds_atm.effr_params = effr_params</code> (L125) so the variable loop can reach the scheme handle.</p>
+    <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/effr.py#L117-L187">met/effr.py:L117-L187</a> &nbsp;|&nbsp; <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/effr.py#L39-L49">SCHEME_COMPATIBLE_SOURCES L39-L49</a></p>
+  </div>
+</div>
+
+<div class="arrow"><svg width="2" height="28"><line x1="1" y1="0" x2="1" y2="28" stroke="var(--arrow)" stroke-width="2"/></svg><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+<!-- COORDS + FLIP -->
+<div class="node node-green" id="node-coords">
+  <div class="node-header" onclick="toggle('coords')">
+    <span class="badge">Dimensions</span>
+    Build coords, normalize lon, flip pressure axis (surface = last)
+    <span class="toggle" id="toggle-coords">&#9654;</span>
+  </div>
+  <div class="node-body" id="body-coords">
+    <p>Creates the empty output dataset with CRTM's dimension convention — <code>level</code> runs 0…N, <code>layer</code> runs 1…N (one fewer) — normalizes longitudes to [0, 360), and writes the two pressure grids. The key transform is <code>flip_p_axis</code>: the pressure axis is flipped so the <em>highest</em> index is the surface. Every atmospheric field written later is flipped the same way to stay aligned.</p>
+    <div class="eq-block green-eq">
+      $$ \texttt{level}=0\ldots N,\qquad \texttt{layer}=1\ldots N,\qquad x \mapsto \mathrm{flip}(x,\ \text{axis}=1) $$
+    </div>
+<pre class="source-block"><span class="ln">L128</span>    coords_dict = {
+<span class="ln">L129</span>        "profile": ("profile", np.arange(n_profiles)),
+<span class="ln">L130</span>        "layer": ("layer", np.arange(1, n_p_levels)),
+<span class="ln">L131</span>        "level": ("level", np.arange(0, n_p_levels)),
+<span class="ln">L132</span>    }
+<span class="ln">L137</span>    flip_p_axis = lambda x: np.flip(x, axis=1)
+<span class="ln">L143</span>    longitudes = lon_to_360(ds_atm.ds.longitude.values.ravel(), lon_name="longitude")
+<span class="ln">L155</span>    ds["p"] = (["profile", "layer"], flip_p_axis(ds_atm.p_layers_grid))
+<span class="ln">L158</span>    ds["p_level"] = (["profile", "level"], flip_p_axis(ds_atm.p_levels_grid))</pre>
+    <p>The <code>p_levels</code> (cell edges) themselves are derived for ECMWF pressure-level data from the layer-centre midpoints, with the top and bottom edges extrapolated:</p>
+    <div class="eq-block green-eq">
+      $$ p^{\text{lev}}_i = p^{\text{lay}}_i + \tfrac{1}{2}\!\left(p^{\text{lay}}_{i+1}-p^{\text{lay}}_i\right) $$
+    </div>
+<pre class="source-block"><span class="ln">L104</span>        diff_p = np.diff(self.p_layers) / 2
+<span class="ln">L105</span>        p_levels = diff_p + self.p_layers[:-1]
+<span class="ln">L106</span>        p_levels = np.concatenate(
+<span class="ln">L107</span>            (
+<span class="ln">L108</span>                [p_levels[0] - 2 * diff_p[0]],
+<span class="ln">L109</span>                p_levels,
+<span class="ln">L110</span>                [p_levels[-1] + 2 * diff_p[-1]],
+<span class="ln">L111</span>            )
+<span class="ln">L112</span>        )</pre>
+    <div class="reads-writes">
+      <span class="rw-label">Reads</span>  <span><code>ds_atm.p_layers_grid</code> <code>ds_atm.p_levels_grid</code> <code>ds_atm.ds.longitude</code></span>
+      <span class="rw-label">Writes</span> <span><code>ds</code> coords <code>ds["longitude"]</code> <code>ds["latitude"]</code> <code>ds["p"]</code> <code>ds["p_level"]</code></span>
+    </div>
+    <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/crtm_inputs.py#L127-L158">crtm_inputs.py:L127-L158</a> &nbsp;|&nbsp; <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/ecmwf.py#L102-L113">ecmwf.py:L102-L113</a></p>
+  </div>
+</div>
+
+<div class="arrow"><svg width="2" height="28"><line x1="1" y1="0" x2="1" y2="28" stroke="var(--arrow)" stroke-width="2"/></svg><span class="arrow-label">add_land_info(ds, ds_land, ds_sfc, ds_atm)</span><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+<!-- LAND MICRO-WRAPPER -->
+<div class="micro-wrapper" id="micro-land">
+  <div class="micro-label">add_land_info — surface coverage &amp; land class</div>
+
+  <div class="micro-inner">
+
+    <div class="node node-teal" id="node-landclass">
+      <div class="node-header" onclick="toggle('landclass')">
+        <span class="badge">Land class</span>
+        Lat/lon → nearest grid cell → IGBP class
+        <span class="typesig noz">::IGBPLandClassData</span>
+        <span class="toggle" id="toggle-landclass">&#9654;</span>
+      </div>
+      <div class="node-body" id="body-landclass">
+        <p>For each profile, the (lat, lon) is transformed into the land grid's CRS and rounded to the nearest cell index; the IGBP land-class integer is read out there. Water/snow/ice cover fractions are fetched the same way.</p>
+        <div class="eq-block teal-eq">
+          $$ \texttt{col}=\mathrm{round}\!\left(\frac{x-x_0}{\Delta x}\right),\qquad \texttt{row}=\mathrm{round}\!\left(\frac{y-y_0}{\Delta y}\right) $$
+        </div>
+<pre class="source-block"><span class="ln">L110</span>        x_points, y_points = self.latlon2crs.transform(longitudes, latitudes)
+<span class="ln">L114</span>        col_idx = np.round((x_points - top_left_x) / dx)
+<span class="ln">L115</span>        row_idx = np.round((y_points - top_left_y) / dy)</pre>
+<pre class="source-block"><span class="ln">L189</span>        row_idx, col_idx = self.get_idx_in_ds(latitudes, longitudes)
+<span class="ln">L190</span>        return self.ds[self.landclass_varname].values[row_idx, col_idx].astype(np.uint8)</pre>
+        <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/land/landdata.py#L169-L190">landdata.py:L169-L190</a> &nbsp;|&nbsp; <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/land/landdata.py#L75-L130">_get_idx_in_ds_crs L75-L130</a></p>
+      </div>
+    </div>
+
+    <div class="arrow"><svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="var(--arrow)" stroke-width="2"/></svg><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+    <div class="node node-teal" id="node-cover">
+      <div class="node-header" onclick="toggle('cover')">
+        <span class="badge">Cover</span>
+        Fetch water / snow / ice cover; land = remainder
+        <span class="toggle" id="toggle-cover">&#9654;</span>
+      </div>
+      <div class="node-body" id="body-cover">
+        <p>The land-classification dataset supplies water, snow, and ice cover fractions per cell; land cover is whatever remains so the four fractions sum to one.</p>
+        <div class="eq-block teal-eq">
+          $$ c_{\text{land}} = 1 - c_{\text{water}} - c_{\text{snow}} - c_{\text{ice}} $$
+        </div>
+<pre class="source-block"><span class="ln">L260</span>    land_type = ds_land.get_crtm_landclass(latitudes, longitudes)
+<span class="ln">L261</span>    ds_water_cover = ds_land.get_water_cover(latitudes, longitudes)
+<span class="ln">L262</span>    ds_snow_cover = ds_land.get_snow_cover(latitudes, longitudes)
+<span class="ln">L263</span>    ds_ice_cover = ds_land.get_ice_cover(latitudes, longitudes)
+<span class="ln">L264</span>    ds_land_cover = 1 - ds_water_cover - ds_snow_cover - ds_ice_cover</pre>
+        <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/crtm_inputs.py#L256-L264">crtm_inputs.py:L256-L264</a></p>
+      </div>
+    </div>
+
+    <div class="arrow"><svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="var(--arrow)" stroke-width="2"/></svg><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+    <div class="node node-decision">
+      <div class="node-header"><span class="badge">Branch</span>&nbsp;<code>if ds_land.use_snow_class:</code></div>
+      <div class="node-body">
+        <strong>True</strong> → keep the land dataset's fixed-in-time snow/ice/water cover as-is.<br>
+        <strong>False</strong> (default, IGBP) → reconcile the fixed snapshot with the NWP model's dynamic snow via <code>assign_coverage_nwp_snow</code> (next node). A non-IGBP source here raises <code>NotImplementedError</code>.
+      </div>
+    </div>
+
+    <div class="arrow"><svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="var(--arrow)" stroke-width="2"/></svg><span class="arrow-label">use_snow_class == False</span><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+    <div class="node node-teal" id="node-snowrec">
+      <div class="node-header" onclick="toggle('snowrec')">
+        <span class="badge">Snow</span>
+        Reconcile dynamic NWP snow with fixed land covers
+        <span class="toggle" id="toggle-snowrec">&#9654;</span>
+      </div>
+      <div class="node-body" id="body-snowrec">
+        <p>Mixing a fixed land snapshot with the NWP's time-varying snow needs assumptions: water cover is left unchanged (no snow settles on water), ice cover is zeroed (NWP snow is assumed to cover the dataset's ice), and snow cover is the NWP snow capped at the cell's non-water fraction. The NWP snow fraction itself comes from the surface dataset via <code>ds_sfc.convert_units(vr.SnowCover)</code>.</p>
+        <div class="eq-block teal-eq">
+          $$ c_{\text{snow}} = \min\!\left(c_{\text{nwp}},\ c_{\text{land}}^{0}+c_{\text{snow}}^{0}+c_{\text{ice}}^{0}\right),\qquad c_{\text{ice}} = 0 $$
+        </div>
+<pre class="source-block"><span class="ln">L58</span>    final_ice_cov = np.zeros_like(ds_ice_cov)
+<span class="ln">L60</span>    fraction_of_potential_snow_cover = ds_land_cov + ds_snow_cov + ds_ice_cov
+<span class="ln">L61</span>    final_snow_cov = np.minimum(nwp_snow_cov, fraction_of_potential_snow_cover)</pre>
+        <p>Exception: where the land class is literally "snow_or_ice" (IGBP 15) but the NWP predicts no snow, the dataset's own snow/ice are restored — the class gives no underlying land type to fall back on.</p>
+        <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/land/coverage.py#L6-L74">coverage.py:L6-L74</a></p>
+      </div>
+    </div>
+
+    <div class="arrow"><svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="var(--arrow)" stroke-width="2"/></svg><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+    <div class="node node-teal" id="node-cleanupcov">
+      <div class="node-header" onclick="toggle('cleanupcov')">
+        <span class="badge">Write</span>
+        cleanup_coverage, write covers, set ds_atm.is_land
+        <span class="toggle" id="toggle-cleanupcov">&#9654;</span>
+      </div>
+      <div class="node-body" id="body-cleanupcov">
+        <p>CRTM crashes if a profile is classified as non-land (water / snow_or_ice) yet carries a non-zero land fraction — a <code>~1e-16</code> numerical artefact is enough. <code>cleanup_coverage</code> redistributes that tiny land cover onto the matching class and clips all fractions to [0, 1] (the same fix NOAA's UPP applies). The four cover fields are then written, and a land/not-land flag is pushed back to the atmospheric wrapper for the cloud parametrizations.</p>
+        <div class="eq-block teal-eq">
+          $$ \text{is\_land} \;=\; c_{\text{water}} < 0.5 $$
+        </div>
+<pre class="source-block"><span class="ln">L122</span>        idx_non_zero_land_cov = (land_class == IGBP_WATER_CLASS) &amp; (land_cover != 0)
+<span class="ln">L124</span>        water_cover[idx_non_zero_land_cov] += land_cover[idx_non_zero_land_cov]
+<span class="ln">L125</span>        land_cover[idx_non_zero_land_cov] = 0.0
+<span class="ln">L139</span>    clip = lambda x: np.clip(x, 0, 1, out=x)</pre>
+<pre class="source-block"><span class="ln">L305</span>    ds_crtm["land_type"] = (["profile"], land_type)
+<span class="ln">L306</span>    ds_crtm["land_cov"] = (["profile"], land_cover.astype(FLOAT_DTYPE))
+<span class="ln">L329</span>    ds_atm.is_land = ds_crtm["water_cov"].values &lt; 0.5</pre>
+        <div class="reads-writes">
+          <span class="rw-label">Writes</span> <span><code>ds["land_type"]</code> <code>ds["land_cov"]</code> <code>ds["water_cov"]</code> <code>ds["snow_cov"]</code> <code>ds["ice_cov"]</code> <code>ds_atm.is_land</code></span>
+        </div>
+        <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/land/coverage.py#L77-L144">coverage.py:L77-L144</a> &nbsp;|&nbsp; <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/crtm_inputs.py#L294-L329">crtm_inputs.py:L294-L329</a></p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="arrow"><svg width="2" height="28"><line x1="1" y1="0" x2="1" y2="28" stroke="var(--arrow)" stroke-width="2"/></svg><span class="arrow-label">add_time_info(ds, ds_atm)</span><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+<!-- TIME -->
+<div class="node node-config" id="node-time">
+  <div class="node-header" onclick="toggle('time')">
+    <span class="badge">Time</span>
+    add_time_info — year / month / day / hour-of-day per profile
+    <span class="toggle" id="toggle-time">&#9654;</span>
+  </div>
+  <div class="node-body" id="body-time">
+    <p>Reads the dataset's time axis (a scalar or per-profile array of <code>np.datetime64</code>), converts to Python datetimes, and splits into integer year/month/day plus a float hour-of-day (the decimal carries minutes/seconds). CRTM uses these for the solar geometry.</p>
+    <div class="eq-block gray-eq">
+      $$ h = \frac{\Delta t_{\text{since midnight}}\ [\text{s}]}{3600} $$
+    </div>
+<pre class="source-block"><span class="ln">L350</span>    raw_time_values = ds_atm.ds[ds_atm.time_axis].values
+<span class="ln">L378</span>    ds_crtm["hour"] = (
+<span class="ln">L379</span>        ["profile"],
+<span class="ln">L380</span>        np.array([get_hour_float(time) for time in datetime_list], dtype=FLOAT_DTYPE),
+<span class="ln">L381</span>    )</pre>
+    <div class="reads-writes">
+      <span class="rw-label">Writes</span> <span><code>ds["year"]</code> <code>ds["month"]</code> <code>ds["day"]</code> <code>ds["hour"]</code></span>
+    </div>
+    <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/crtm_inputs.py#L332-L381">crtm_inputs.py:L332-L381</a> &nbsp;|&nbsp; <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/utils.py#L26-L46">utils.py:L26-L46</a></p>
+  </div>
+</div>
+
+<div class="arrow"><svg width="2" height="28"><line x1="1" y1="0" x2="1" y2="28" stroke="var(--arrow)" stroke-width="2"/></svg><span class="arrow-label">add_absorber_data(ds, absorber_data, ds_atm)</span><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+<!-- ABSORBER -->
+<div class="node node-blue" id="node-absorber">
+  <div class="node-header" onclick="toggle('absorber')">
+    <span class="badge">Gases</span>
+    add_absorber_data — interpolate well-mixed CO₂ / CO / CH₄ profiles
+    <span class="typesig hx">::AbsorberData</span>
+    <span class="toggle" id="toggle-absorber">&#9654;</span>
+  </div>
+  <div class="node-body" id="body-absorber">
+    <p>Well-mixed gases aren't taken from the NWP source — they're read from a US-standard-atmosphere CSV and linearly interpolated onto this run's pressure layers. The loop runs over CO₂ / CO / CH₄ (and O₃ <em>only</em> for HRRR, which doesn't simulate ozone). Each profile is broadcast across all profiles, flipped to match the pressure-axis convention, and stored in ppm.</p>
+    <div class="eq-block">
+      $$ \chi_{\text{gas}}(p) = \mathrm{interp}\big(p;\ p_{\text{std}},\ \chi_{\text{std}}\big),\qquad (n_{\text{lay}}) \to (n_{\text{prof}}, n_{\text{lay}}) $$
+    </div>
+<pre class="source-block"><span class="ln">L411</span>    for absorber in gaseous_abs:
+<span class="ln">L413</span>        profile_abs = absorber_data.get_absorber_profile(absorber, ds_atm.p_layers)
+<span class="ln">L417</span>        ds_crtm[absorber] = (
+<span class="ln">L418</span>            ["profile", "layer"],
+<span class="ln">L419</span>            np.flip(
+<span class="ln">L420</span>                np.broadcast_to(profile_abs, (ds_atm.n_profiles, ds_atm.n_p_layers)),
+<span class="ln">L421</span>                axis=1,
+<span class="ln">L422</span>            ).astype(FLOAT_DTYPE),
+<span class="ln">L423</span>        )</pre>
+<pre class="source-block"><span class="ln">L47</span>        return np.interp(target_layers, self.data.p, self.data[absorber])</pre>
+    <p>Note: O₃ is added to the gas list only for HRRR (L407–408). For ECMWF, ozone instead arrives through the atmospheric variable loop. The variable loop later overwrites nothing here for ECMWF because it skips re-setting these gases.</p>
+    <div class="reads-writes">
+      <span class="rw-label">Reads</span>  <span><code>absorber_data.data</code> <code>ds_atm.p_layers</code> <code>ds_atm.n_profiles</code></span>
+      <span class="rw-label">Writes</span> <span><code>ds["co2"]</code> <code>ds["co"]</code> <code>ds["ch4"]</code> (<code>ds["o3"]</code> HRRR)</span>
+    </div>
+    <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/crtm_inputs.py#L384-L428">crtm_inputs.py:L384-L428</a> &nbsp;|&nbsp; <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/absorbers.py#L78-L100">absorbers.py:L78-L100</a></p>
+  </div>
+</div>
+
+<div class="arrow"><svg width="2" height="28"><line x1="1" y1="0" x2="1" y2="28" stroke="var(--arrow)" stroke-width="2"/></svg><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+<!-- ATM VARIABLE LOOP -->
+<div class="loop-wrapper" id="loop-atm">
+  <div class="loop-label">Atmospheric variables &nbsp; <span class="cond">for crtm_varname in CRTM_MET_INPUTS.atm:</span></div>
+
+  <div style="font-size:.78rem;color:var(--blue);text-align:center;padding:.2rem 0 .8rem;font-family:var(--font-mono)">
+    12 fields: t · q · o3 · cfrac · ciwc · clwc · crwc · cswc · 4 × radius (ice/liquid/rain/snow)
+  </div>
+
+  <div class="loop-inner">
+
+    <div class="node node-decision">
+      <div class="node-header"><span class="badge">Skip</span>&nbsp;<code>if crtm_varname == "o3" and ds_atm.met_source == "HRRR":</code></div>
+      <div class="node-body">
+        For HRRR, ozone was already filled from the absorber CSV in <code>add_absorber_data</code>; re-running it here would overwrite that profile with <code>-1</code>, so the loop <code>continue</code>s. ECMWF falls through and converts its real O₃ field.
+      </div>
+    </div>
+
+    <div class="arrow"><svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="var(--arrow)" stroke-width="2"/></svg><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+    <div class="node node-blue" id="node-convert">
+      <div class="node-header" onclick="toggle('convert')">
+        <span class="badge">Convert</span>
+        make_crtm_var → convert_units: per-field unit conversion
+        <span class="typesig cmp">::ECMWFAtmData</span>
+        <span class="toggle" id="toggle-convert">&#9654;</span>
+      </div>
+      <div class="node-body" id="body-convert">
+        <p><code>make_crtm_var</code> looks up the <code>Variable</code> in the registry and delegates to the concrete subclass's <code>convert_units</code>, which <code>match</code>es on the variable and applies the right physics. For the four cloud-radius variables it routes into the effective-radius layer below.</p>
+<pre class="source-block"><span class="ln">L52</span>        var = CRTM_MET_INPUTS.get(crtm_varname)
+<span class="ln">L53</span>        data = self.convert_units(var)
+<span class="ln">L55</span>        return var, data</pre>
+        <p><strong>Single-variable conversions (ECMWF):</strong></p>
+        <div class="eq-block">
+          $$ \text{O}_3:\ \mathrm{VMR} = \mathrm{MMR}\cdot 10^{6}\,\frac{M_{\text{dry}}}{M_{\text{O}_3}}, \qquad q:\ q_{\text{CRTM}} = \frac{q}{q_{\text{dry}}}\cdot 10^{3}\ \mathrm{g\,kg^{-1}} $$
+        </div>
+<pre class="source-block"><span class="ln">L252</span>                return data.values * 1e6 * M_dryair / M_ozone
+<span class="ln">L256</span>                return specific_concentration_to_mmr(data.values, self.q_dry) * KG_2_G</pre>
+        <p><strong>Cloud water → mass path</strong> (ciwc/clwc/crwc/cswc) integrates specific concentration over the pressure thickness using the hydrostatic relation:</p>
+        <div class="eq-block">
+          $$ m_i = \int_{P_1}^{P_0}\!\frac{q_i}{g}\,dP \;\approx\; q_i\,\frac{|\Delta P|}{g} $$
+        </div>
+<pre class="source-block"><span class="ln">L265</span>                return specific_concentration_to_masspath(data.values, self.p_levels)
+<span class="ln">L63</span>    return spec_concentration * np.abs(dP_levels) / g</pre>
+        <p><code>cfrac</code> is clipped to [0, 1]; <code>T</code> passes through unchanged.</p>
+        <div class="reads-writes">
+          <span class="rw-label">Reads</span>  <span><code>self.q_dry</code> <code>self.p_levels</code> <code>data.values</code></span>
+          <span class="rw-label">Writes</span> <span><code>data</code> (converted ndarray)</span>
+        </div>
+        <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/ecmwf.py#L156-L274">ecmwf.py:L156-L274</a> &nbsp;|&nbsp; <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/unit_conversion.py#L6-L126">unit_conversion.py:L6-L126</a></p>
+      </div>
+    </div>
+
+    <div class="arrow"><svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="var(--arrow)" stroke-width="2"/></svg><span class="arrow-label">case CloudIceRadius | …Liquid | …Rain | …Snow</span><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+    <!-- EFFR MICRO-WRAPPER -->
+    <div class="micro-wrapper" id="micro-effr">
+      <div class="micro-label">Effective radius — cloud-particle microphysics (4 radius vars only)</div>
+
+      <div class="micro-inner">
+
+        <div style="font-size:.76rem;color:var(--red);text-align:center;padding:.1rem 0 .7rem;font-family:var(--font-mono);max-width:760px">
+          Common prep (ECMWF): mmr_specie = q_specie / q_dry; ρ = moist-air density.<br>
+          $$ \rho = \frac{P - (1 - M_w/M_d)\,e_w}{R\,T} $$
+        </div>
+
+        <div class="node node-red" id="node-ice">
+          <div class="node-header" onclick="toggle('ice')">
+            <span class="badge">Ice</span>
+            compute_ice_reff — ECMWF IFS ice scheme
+            <span class="typesig cmb">::EffectiveRadius</span>
+            <span class="toggle" id="toggle-ice">&#9654;</span>
+          </div>
+          <div class="node-body" id="body-ice">
+            <p>The ECMWF ice scheme (IFS CY41R2, p.100) derives a temperature-dependent particle number from the difference between liquid and ice saturation pressures, then — assuming identical spherical ice particles — backs out a radius from the mass of one particle. Saturation pressures use the Sonntag formulae.</p>
+            <div class="eq-block red-eq">
+              $$ N = 1000\,\exp\!\Big(12.96\,\tfrac{e_l - e_i}{e_i} - 0.639\Big),\qquad r = \Big(\tfrac{m_1}{\rho_{\text{ice}}}\cdot\tfrac{3}{4\pi}\Big)^{1/3} $$
+            </div>
+<pre class="source-block"><span class="ln">L553</span>    liquid_saturation = pSat_H2Ol(temperature)
+<span class="ln">L554</span>    ice_saturation = pSat_H2Os(temperature)
+<span class="ln">L557</span>    particle_number = 1000 * np.exp(
+<span class="ln">L558</span>        12.96 * (liquid_saturation - ice_saturation) / ice_saturation - 0.639
+<span class="ln">L559</span>    )
+<span class="ln">L563</span>    mass_1_particle = ciwc * rho / particle_number
+<span class="ln">L566</span>    return (mass_1_particle / Density_ice * (3 / (4 * np.pi))) ** (1 / 3)</pre>
+            <p>Result is in metres; the caller multiplies by <code>M_2_UM</code> (1e6) to return µm.</p>
+            <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/effr.py#L522-L566">effr.py:L522-L566</a> &nbsp;|&nbsp; <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/unit_conversion.py#L129-L174">pSat L129-L174</a></p>
+          </div>
+        </div>
+
+        <div class="arrow"><svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="var(--arrow)" stroke-width="2"/></svg><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+        <div class="node node-red" id="node-liquid">
+          <div class="node-header" onclick="toggle('liquid')">
+            <span class="badge">Liquid</span>
+            compute_liquid_reff — Bower (1994) with IFS droplet counts
+            <span class="typesig cmb">::EffectiveRadius</span>
+            <span class="toggle" id="toggle-liquid">&#9654;</span>
+          </div>
+          <div class="node-body" id="body-liquid">
+            <p>The Bower scheme converts liquid water content to g/m³, then assumes a fixed cloud-droplet number concentration (from IFS CY41R2 p.103: 300 cm⁻³ over land, 50 over ocean — selected per profile by the <code>is_land</code> flag set back in the land step) to size a sphere of that LWC split into N drops.</p>
+            <div class="eq-block red-eq">
+              $$ \text{LWC} = 10^{3}\,\text{clwc}\,\rho,\qquad r = 100\Big(\frac{3\,\text{LWC}}{4\pi N}\Big)^{1/3} $$
+            </div>
+<pre class="source-block"><span class="ln">L596</span>    lwc = KG_2_G * clwc * rho
+<span class="ln">L603</span>    N_OCEAN = 50  # cm**-3
+<span class="ln">L604</span>    N_LAND = 300  # cm**-3
+<span class="ln">L613</span>        radii[is_land, :] = 100 * (lwc[is_land, :] * 3 / (4 * np.pi * N_LAND)) ** (
+<span class="ln">L614</span>            1 / 3
+<span class="ln">L615</span>        )</pre>
+            <p>If <code>is_land</code> is <code>None</code>, a single mean droplet count is used instead (the "simplified" branch).</p>
+            <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/effr.py#L569-L619">effr.py:L569-L619</a></p>
+          </div>
+        </div>
+
+        <div class="arrow"><svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="var(--arrow)" stroke-width="2"/></svg><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+        <div class="node node-red" id="node-rainsnow">
+          <div class="node-header" onclick="toggle('rainsnow')">
+            <span class="badge">Rain / Snow</span>
+            compute_rain_reff &amp; compute_snow_reff — IFS exponential PSD
+            <span class="typesig cmb">::EffectiveRadius</span>
+            <span class="toggle" id="toggle-rainsnow">&#9654;</span>
+          </div>
+          <div class="node-body" id="body-rainsnow">
+            <p>Rain and snow share the ECMWF IFS hydrometeor scheme (p.96): an exponential particle-size distribution N(D)=N₀ exp(−ΛD), where the slope Λ comes from the specie mass and air density via Table-7.1 coefficients (rain vs snow differ only in n<sub>a</sub>, n<sub>b</sub>, a, b). The effective radius is the 3rd/2nd-moment ratio, which for this distribution is 3/(2Λ).</p>
+            <div class="eq-block red-eq">
+              $$ \Lambda = \Big(\frac{n_{a}\,a\,\Gamma(b+1)}{q\,\rho}\Big)^{\!\frac{1}{\,b+1-n_{b}\,}},\qquad r_{\text{eff}} = \frac{3}{2\Lambda} $$
+            </div>
+<pre class="source-block"><span class="ln">L502</span>    gamma = scipy.special.gamma(bx + 1)
+<span class="ln">L503</span>    numerator = nax * ax * gamma
+<span class="ln">L504</span>    denominator = specific_mass_q_hydrometeor * rho
+<span class="ln">L511</span>    result[non_zero_hydrometeor] = (numerator / denominator[non_zero_hydrometeor]) ** (
+<span class="ln">L512</span>        1 / (bx + 1 - nbx)
+<span class="ln">L513</span>    )
+<span class="ln">L518</span>    result[non_zero_hydrometeor] = 3 / (2 * result[non_zero_hydrometeor])</pre>
+            <p>Cells with zero rain/snow are left at radius 0 (the mask avoids divide-by-zero). Result in metres → ×1e6 to µm.</p>
+            <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/effr.py#L457-L519">effr.py:L457-L519</a></p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="arrow"><svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="var(--arrow)" stroke-width="2"/></svg><span class="arrow-label">data (in CRTM units)</span><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+    <div class="node node-purple" id="node-write-atm">
+      <div class="node-header" onclick="toggle('write-atm')">
+        <span class="badge">Write</span>
+        Cast dtype, flip pressure axis, attach attrs, store in ds
+        <span class="toggle" id="toggle-write-atm">&#9654;</span>
+      </div>
+      <div class="node-body" id="body-write-atm">
+        <p>Each converted field is cast to float32/int32, flipped on the pressure axis (so it aligns with the surface-last convention from the coords step), and stored under its CRTM dims with units/description/source attributes.</p>
+<pre class="source-block"><span class="ln">L182</span>        save_dtype = _get_dtype(data.dtype)
+<span class="ln">L184</span>        ds[crtm_varname] = (var.crtm_dims, flip_p_axis(data).astype(save_dtype))
+<span class="ln">L186</span>        ds[crtm_varname].attrs["units"] = var.crtm_units
+<span class="ln">L188</span>        ds[crtm_varname].attrs["source"] = ds_atm.met_source.value</pre>
+        <div class="reads-writes">
+          <span class="rw-label">Writes</span> <span><code>ds[crtm_varname]</code> + attrs</span>
+        </div>
+        <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/crtm_inputs.py#L179-L188">crtm_inputs.py:L179-L188</a></p>
+      </div>
+    </div>
+
+    <div class="arrow"><svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="var(--arrow)" stroke-width="2"/></svg><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+    <div class="node node-decision">
+      <div class="node-header"><span class="badge">Loop exit</span>&nbsp;<code>for crtm_varname in CRTM_MET_INPUTS.atm:</code></div>
+      <div class="node-body">
+        <strong>More variables</strong> → next <code>crtm_varname</code> (the HRRR-O₃ <code>continue</code> guard re-checked first), restart from the convert node above.<br>
+        <strong>Registry exhausted</strong> (all 12 atm fields written) → fall through to the scheme-attrs node.
+      </div>
+    </div>
+
+    <div class="loop-feedback">↑ If more atm variables remain, restart from the convert_units node above.</div>
+  </div>
+</div>
+
+<div class="arrow"><svg width="2" height="28"><line x1="1" y1="0" x2="1" y2="28" stroke="var(--arrow)" stroke-width="2"/></svg><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+<!-- RADII ATTRS -->
+<div class="node node-config" id="node-radii-attrs">
+  <div class="node-header" onclick="toggle('radii-attrs')">
+    <span class="badge">Provenance</span>
+    Tag each radius variable with the scheme that produced it
+    <span class="toggle" id="toggle-radii-attrs">&#9654;</span>
+  </div>
+  <div class="node-body" id="body-radii-attrs">
+    <p>Records which parametrization computed each cloud-radius field as a <code>parametrization</code> attribute, so the output is self-documenting.</p>
+<pre class="source-block"><span class="ln">L197</span>    for var in radii_vars:
+<span class="ln">L198</span>        scheme_name = effr_params.specie2scheme[
+<span class="ln">L199</span>            effr_params.crtm_name_2_specie(var.crtm_name)
+<span class="ln">L200</span>        ]
+<span class="ln">L201</span>        ds[var.crtm_name].attrs["parametrization"] = scheme_name</pre>
+    <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/crtm_inputs.py#L191-L201">crtm_inputs.py:L191-L201</a></p>
+  </div>
+</div>
+
+<div class="arrow"><svg width="2" height="28"><line x1="1" y1="0" x2="1" y2="28" stroke="var(--arrow)" stroke-width="2"/></svg><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+<!-- HRRR WIND DECISION -->
+<div class="node node-decision">
+  <div class="node-header"><span class="badge">HRRR only</span>&nbsp;<code>if isinstance(ds_sfc, HRRRSfcData) and ds_sfc.wind_data is None:</code></div>
+  <div class="node-body">
+    HRRR surface data has no 10 m winds, so for HRRR they're pulled from the lowest atmospheric model level via <code>ds_sfc._append_wind_data(ds_atm)</code>. For the ECMWF main path this branch is skipped (ECMWF carries <code>u10</code>/<code>v10</code> directly). See the HRRR sidebar.
+  </div>
+</div>
+
+<div class="arrow"><svg width="2" height="28"><line x1="1" y1="0" x2="1" y2="28" stroke="var(--arrow)" stroke-width="2"/></svg><span class="arrow-label">for crtm_varname in CRTM_MET_INPUTS.sfc</span><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+<!-- SFC VARIABLE LOOP -->
+<div class="loop-wrapper" id="loop-sfc">
+  <div class="loop-label">Surface variables &nbsp; <span class="cond">for crtm_varname in CRTM_MET_INPUTS.sfc:</span></div>
+
+  <div style="font-size:.78rem;color:var(--blue);text-align:center;padding:.2rem 0 .8rem;font-family:var(--font-mono)">
+    6 fields: land_temperature · wind_speed · water_temperature · snow_temperature · snow_type · snow_grain_size
+  </div>
+
+  <div class="loop-inner">
+
+    <div class="node node-teal" id="node-sfc-convert">
+      <div class="node-header" onclick="toggle('sfc-convert')">
+        <span class="badge">Sfc convert</span>
+        ECMWFSfcData.convert_units — wind, SST fill, snow cover &amp; type
+        <span class="typesig cmp">::ECMWFSfcData</span>
+        <span class="toggle" id="toggle-sfc-convert">&#9654;</span>
+      </div>
+      <div class="node-body" id="body-sfc-convert">
+        <p>Each surface field is converted per its <code>match</code> case. Highlights:</p>
+        <p><strong>Wind speed</strong> — magnitude of the 10 m vector:</p>
+        <div class="eq-block teal-eq">$$ |\mathbf{V}| = \sqrt{u_{10}^2 + v_{10}^2} $$</div>
+<pre class="source-block"><span class="ln">L366</span>                return np.sqrt(
+<span class="ln">L367</span>                    data[vr.WindSpeed.ecmwf_varname[0]].values ** 2
+<span class="ln">L368</span>                    + data[vr.WindSpeed.ecmwf_varname[1]].values ** 2
+<span class="ln">L369</span>                )</pre>
+        <p><strong>Snow cover</strong> — ERA5 single-level has no direct snow-cover field, so it's inferred from snow depth (m of liquid-water equiv.) and density, with D<sub>cr</sub>=0.1 m the depth for full grid-box coverage (IFS CY41R2 eq. 8.2):</p>
+        <div class="eq-block teal-eq">$$ c_{\text{sn}} = \mathrm{clip}\!\left(\frac{\text{sd}\cdot\rho_w}{\text{rsn}\cdot D_{\text{cr}}},\ 0,\ 1\right) $$</div>
+<pre class="source-block"><span class="ln">L385</span>                snow_mass_per_area = data["sd"].values * Density_liquid_water
+<span class="ln">L389</span>                return np.clip(
+<span class="ln">L390</span>                    snow_mass_per_area / (data["rsn"].values * D_cr),
+<span class="ln">L391</span>                    0,
+<span class="ln">L392</span>                    1,
+<span class="ln">L393</span>                )</pre>
+        <p><strong>Sea-surface temp</strong> — ECMWF leaves SST as NaN over land; where a higher-res land cell is actually water, the NaN is filled with skin temperature so the profile doesn't fail. <strong>Snow type</strong> — derived from snow albedo against a midpoint threshold to flag new (2) vs old (1) snow. <strong>snow_grain_size</strong> uses a CRTM default (no NWP input). Skin/snow temperatures pass through unchanged.</p>
+        <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/ecmwf.py#L313-L437">ecmwf.py:L313-L437</a></p>
+      </div>
+    </div>
+
+    <div class="arrow"><svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="var(--arrow)" stroke-width="2"/></svg><span class="arrow-label">data.ravel().astype(save_dtype)</span><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+    <div class="node node-purple">
+      <div class="node-header" onclick="toggle('sfc-write')">
+        <span class="badge">Write</span>
+        Flatten to (profile,), cast, store with attrs
+        <span class="toggle" id="toggle-sfc-write">&#9654;</span>
+      </div>
+      <div class="node-body" id="body-sfc-write">
+        <p>Surface fields are 1-D <code>(profile,)</code> — no pressure flip needed, just ravel and cast.</p>
+<pre class="source-block"><span class="ln">L218</span>        ds[crtm_varname] = (var.crtm_dims, data.ravel().astype(save_dtype))</pre>
+        <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/crtm_inputs.py#L211-L222">crtm_inputs.py:L211-L222</a></p>
+      </div>
+    </div>
+
+    <div class="arrow"><svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="var(--arrow)" stroke-width="2"/></svg><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+    <div class="node node-decision">
+      <div class="node-header"><span class="badge">Loop exit</span>&nbsp;<code>for crtm_varname in CRTM_MET_INPUTS.sfc:</code></div>
+      <div class="node-body">
+        <strong>More variables</strong> → next surface field, restart from the convert node above.<br>
+        <strong>Registry exhausted</strong> (all 6 sfc fields written) → fall through to cloud cleanup.
+      </div>
+    </div>
+
+    <div class="loop-feedback">↑ If more surface variables remain, restart from the convert_units node above.</div>
+  </div>
+</div>
+
+<div class="arrow"><svg width="2" height="28"><line x1="1" y1="0" x2="1" y2="28" stroke="var(--arrow)" stroke-width="2"/></svg><span class="arrow-label">cleanup_cloudvars(ds)</span><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+<!-- CLEANUP CLOUDS -->
+<div class="node node-orange" id="node-cleanclouds">
+  <div class="node-header" onclick="toggle('cleanclouds')">
+    <span class="badge">Consistency</span>
+    cleanup_cloudvars — zero cloud fields where the cell is cloud-free
+    <span class="toggle" id="toggle-cleanclouds">&#9654;</span>
+  </div>
+  <div class="node-body" id="body-cleanclouds">
+    <p>NWP output is sometimes inconsistent: a cell may have non-zero cloud fraction but zero condensate, or vice-versa — both meaning "no cloud". This zeroes every cloud variable (fraction, four water contents, four radii) wherever the cell is cloud-free, so the cloud-fraction field can be trusted for clear-vs-cloudy comparisons. It does not change CRTM radiances.</p>
+    <div class="eq-block orange-eq">
+      $$ \text{cloud\_free} = (\text{cfrac}=0)\ \lor\ \big(\text{ciwc}=\text{clwc}=\text{crwc}=\text{cswc}=0\big) $$
+    </div>
+<pre class="source-block"><span class="ln">L27</span>    cloud_free_cell = (ds_crtm[vr.CloudFraction.crtm_name] == 0) | (
+<span class="ln">L28</span>        (ds_crtm[vr.CIWC.crtm_name] == 0)
+<span class="ln">L29</span>        &amp; (ds_crtm[vr.CLWC.crtm_name] == 0)
+<span class="ln">L30</span>        &amp; (ds_crtm[vr.CRWC.crtm_name] == 0)
+<span class="ln">L31</span>        &amp; (ds_crtm[vr.CSWC.crtm_name] == 0)
+<span class="ln">L32</span>    )</pre>
+    <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/clouds.py#L6-L56">met/clouds.py:L6-L56</a></p>
+  </div>
+</div>
+
+<div class="arrow"><svg width="2" height="28"><line x1="1" y1="0" x2="1" y2="28" stroke="var(--arrow)" stroke-width="2"/></svg><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+<!-- OPTIONAL XY -->
+<div class="node node-orange">
+  <div class="node-header" onclick="toggle('xy')">
+    <span class="badge">Optional</span>
+    Attach (x, y) reference indices — if xy_coords given
+    <span class="toggle" id="toggle-xy">&#9654;</span>
+  </div>
+  <div class="node-body" id="body-xy">
+    <p>If the caller passed <code>xy_coords</code>, store the original column/row indices so a flattened (profile-list) result can be un-flattened back to a grid after simulation. No-op otherwise.</p>
+<pre class="source-block"><span class="ln">L229</span>    if xy_coords is not None:
+<span class="ln">L230</span>        ds["x"] = ("profile", xy_coords[0, :].astype(np.int32))
+<span class="ln">L231</span>        ds["y"] = ("profile", xy_coords[1, :].astype(np.int32))</pre>
+    <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/crtm_inputs.py#L229-L233">crtm_inputs.py:L229-L233</a></p>
+  </div>
+</div>
+
+<div class="arrow"><svg width="2" height="28"><line x1="1" y1="0" x2="1" y2="28" stroke="var(--arrow)" stroke-width="2"/></svg><svg width="12" height="10"><polygon points="0,0 12,0 6,10" fill="var(--arrow)"/></svg></div>
+
+<!-- RETURN -->
+<div class="node node-output" id="node-return">
+  <div class="node-header" onclick="toggle('return')">
+    <span class="badge">Return</span>
+    return ds — CRTM-driver-ready xr.Dataset
+    <span class="toggle" id="toggle-return">&#9654;</span>
+  </div>
+  <div class="node-body" id="body-return">
+    <p>The assembled dataset — coords, two pressure grids, time, land/cover, well-mixed gases, all atmospheric + surface CRTM variables, and cloud-radius parametrizations — is returned. Downstream it's written to NetCDF and handed to the Fortran <code>crtm-driver</code> (modes <code>weather_input</code> / <code>weather_input_k_matrix</code>), which is the <em>only</em> contract between the two halves of the repo.</p>
+<pre class="source-block"><span class="ln">L235</span>    return ds</pre>
+    <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/crtm_inputs.py#L235">crtm_inputs.py:L235</a></p>
+  </div>
+</div>
+
+</div><!-- /flow -->
+
+<!-- ============================================================ -->
+<!-- SIDEBAR: HRRR                                                 -->
+<!-- ============================================================ -->
+<div class="sidebar-callout" id="sidebar-hrrr">
+  <h3><span class="badge">HRRR</span> Where this story branches — the model-level path</h3>
+  <p>The same <code>make_crtm_input</code> runs for HRRR data, but several source-specific quirks flip on (all localized to <code>HRRRAtmData</code> / <code>HRRRSfcData</code> and a handful of guards in the main file):</p>
+  <ul>
+    <li><strong>Model levels, not pressure levels.</strong> <code>p_layers</code>/<code>p_levels</code> are 2-D <code>(profile, layer)</code>, so the <code>*_grid</code> broadcasts are no-ops and absorbers interpolate via the 2-D path. ERA5's 1-D pressure axis is the simpler case shown in the main flow.</li>
+    <li><strong>No ozone.</strong> HRRRv4 doesn't simulate O₃, so it's appended to the well-mixed gas list and filled from the US-standard-atmosphere CSV; the atm loop then <code>continue</code>s past O₃ to avoid overwriting it with −1.</li>
+    <li><strong>No surface winds.</strong> HRRR surface data lacks 10 m winds, so they're taken from the lowest atmospheric model level (level 1):</li>
+  </ul>
+<pre class="source-block"><span class="ln">L256</span>        self.wind_data = ds_atm.ds.sel({"valueOfFirstFixedSurface": 1})[
+<span class="ln">L257</span>            vr.WindSpeed.hrrr_varname
+<span class="ln">L258</span>        ]</pre>
+  <ul>
+    <li><strong>Thompson schemes unlock.</strong> Because HRRR carries particle <em>number</em> concentrations (NCCICE/NCONCD/SPNCR), the <code>THOMPSON8</code>/<code>THOMPSON28</code> radius schemes pass <code>validate_compatibility</code> for HRRR but are rejected for ECMWF. Those schemes route through <code>upp_effr.get_effective_radius</code> instead of the ECMWF/Bower closed forms in the main flow.</li>
+  </ul>
+  <p>If the HRRR branch is worth its own full walkthrough (the <code>upp_effr</code> Thompson microphysics is substantial), it deserves a sibling flowchart — this callout marks the seam.</p>
+  <p class="ref"><strong>Source:</strong> <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/hrrr.py#L246-L258">hrrr.py:L246-L258</a> &nbsp;|&nbsp; <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/crtm_inputs.py#L170-L209">crtm_inputs.py:L170-L209</a> &nbsp;|&nbsp; <a href="https://github.mit.edu/lrobion/crtm-experiments/blob/db2ca7bde7555eb3873c1016f25725bd43995715/crtm-inputs/src/crtm_inputs/met/upp_effr.py">met/upp_effr.py</a></p>
+</div>
+
+<!-- ============================================================ -->
+<!-- FOOTER                                                        -->
+<!-- ============================================================ -->
+<div style="max-width:820px;margin:2rem auto 0;padding:1rem 1.2rem;background:#fff;border:1px solid var(--gray-border);border-radius:var(--radius);box-shadow:var(--shadow);font-size:.82rem;color:var(--gray)">
+  <p style="margin-bottom:.5rem"><strong>Conventions.</strong> CRTM input datasets use dims <code>(profile, layer)</code> and <code>(profile, level)</code> with <code>level</code> = 0…N and <code>layer</code> = 1…N. The pressure axis is flipped on write so the highest index is the surface; every atmospheric field is flipped to match. Floats cast to float32, ints to int32. Atmospheric data must already be on <code>(profile, vertical)</code> and surface on <code>(profile,)</code> before <code>make_crtm_input</code> — interpolation to target lat/lon/time is done earlier by <code>MetData.from_nwp_data</code>.</p>
+  <p style="margin-bottom:.5rem"><strong>Physics references.</strong> ECMWF IFS Documentation CY41R2, Part IV (cloud ice p.100, rain/snow p.96, liquid droplet counts p.103, snow cover eq. 8.2) — doi:10.21957/tr5rv27xu. Bower et al. 1994 (liquid effective radius). Sonntag 1990/1994 (saturation pressures). Moist-air density after Williams (1949).</p>
+  <p>Generated from <code>github.mit.edu/lrobion/crtm-experiments</code> @ <code>db2ca7bde7555eb3873c1016f25725bd43995715</code>. Every node links a pinned-SHA permalink; expand a node to audit its source. Main path = ECMWF pressure-level; HRRR quirks summarized in the sidebar.</p>
+</div>
+
+</div><!-- /container -->
+
+<script>
+function toggle(id){
+  const body=document.getElementById('body-'+id);
+  const icon=document.getElementById('toggle-'+id);
+  if(body.classList.contains('show')){
+    body.classList.remove('show');
+    icon.classList.remove('open');
+  }else{
+    body.classList.add('show');
+    icon.classList.add('open');
+    if(window.renderMathInElement){
+      renderMathInElement(body,{delimiters:[
+        {left:'$$',right:'$$',display:true},
+        {left:'$',right:'$',display:false}
+      ]});
+    }
+  }
+}
+window.addEventListener('beforeprint',function(){
+  document.querySelectorAll('.node-body, .type-body').forEach(function(el){el.classList.add('show')});
+  document.querySelectorAll('.toggle, .type-toggle').forEach(function(el){el.classList.add('open')});
+  if(window.renderMathInElement){
+    renderMathInElement(document.body,{delimiters:[
+      {left:'$$',right:'$$',display:true},
+      {left:'$',right:'$',display:false}
+    ]});
+  }
+});
+
+(function(){
+  var rail = document.querySelector('.toc-rail');
+  var btn = document.querySelector('.toc-toggle');
+  if(rail && btn){
+    var openByDefault = window.matchMedia('(min-width: 1500px)').matches;
+    function setOpen(open){
+      rail.classList.toggle('open', open);
+      btn.classList.toggle('open', open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    setOpen(openByDefault);
+    btn.addEventListener('click', function(){ setOpen(!rail.classList.contains('open')); });
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape' && rail.classList.contains('open')){ setOpen(false); }
+    });
+  }
+
+  var tocLinks = document.querySelectorAll('.toc-rail a[href^="#"]');
+  if(!tocLinks.length) return;
+  tocLinks.forEach(function(link){
+    link.addEventListener('click', function(){
+      var slug = link.dataset.toggle;
+      if(!slug) return;
+      var body = document.getElementById('body-' + slug);
+      if(body && !body.classList.contains('show') && typeof toggle === 'function'){
+        toggle(slug);
+      }
+    });
+  });
+  var targets = Array.prototype.map.call(tocLinks, function(link){
+    var id = link.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    return el ? {link: link, el: el} : null;
+  }).filter(Boolean);
+  var ticking = false;
+  function updateActive(){
+    var focus = window.innerHeight * 0.28;
+    var active = null;
+    for(var i=0; i<targets.length; i++){
+      if(targets[i].el.getBoundingClientRect().top <= focus){ active = targets[i].link; }
+    }
+    tocLinks.forEach(function(l){ l.classList.remove('active'); });
+    if(active) active.classList.add('active');
+    ticking = false;
+  }
+  function onScroll(){ if(!ticking){ requestAnimationFrame(updateActive); ticking = true; } }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll, {passive:true});
+  updateActive();
+})();
+</script>
+
+</body>
+</html>
