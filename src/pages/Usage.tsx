@@ -47,7 +47,7 @@ function Usage() {
       </div>
 
       <div className="log-entry">
-        <h3>Week 2 (Jun 16, 2026)</h3>
+        <h3>Week 2 (Jun 16-18, 2026)</h3>
         <div className="entry-content">
           <div className="entry-section">
             <h4>CRTM Pipeline Fixes — Issues #18, #19, #21, #22</h4>
@@ -70,7 +70,7 @@ function Usage() {
               <li>Opened PR #23 to LAE/crtm-experiments:main</li>
             </ul>
             <p><strong>AI Assistance:</strong> Claude Opus 4.8 — codebase exploration and CLAUDE.md authoring, issue triage, Fortran + Python implementation, git/PR workflow</p>
-            <p><strong>Comments:</strong>
+            <p><strong>Comments:</strong></p>
             <ul>
               <li>Guided bug fixing and improvements to synthetic imagery simulation. I started by writing multiple GitHub issues describing each change I wanted to make. 
             None of the changes were particularly complicated conceptually but needed refactoring and consistency between the two codebases. I didn't describe each issue in detail, isntead relying on the agent to
@@ -81,10 +81,31 @@ function Usage() {
             a bit of knowledge of the actual machinery of a specific library / language.</li>
             <li>Passing it real test data allowed it to confirm that all changes were fine. Before the merging the PR it drafted, I did a review of its changes which were
             well targeted (the right amount of diffs) and simple to follow.</li>
-
-            Once the plan was drafted, it might have been more efficient to spawn another session with a smaller model to complete the task. I still need to get better at this agent / context management.
+            <li>Once the plan was drafted, it might have been more efficient to spawn another session with a smaller model to complete the task. I still need to get better at this agent / context management.</li>
             </ul>
-            </p>
+          </div>
+          <div className="entry-section">
+            <h4>Architecture refactoring for CRTM</h4>
+            <p><strong>Duration:</strong> ~4 session</p>
+            <p><strong>Model:</strong> Claude Opus 4.8 (1M context)</p>
+            <p><strong>Tasks:</strong></p>
+            <ul>
+              <li>Planned refactoring of calculations via a grill-me session: goal is to stream large dataset instead of loading it all in memory</li>
+              <li>Drafted the plan using netCDF4 using the changes that were made in another repository as a baseline</li>
+              <li>Implemented the changes, testing and debugging of the new feature. Probably saved me a day or two of work</li>
+            </ul>
+            <p><strong>AI Assistance:</strong> Claude Opus 4.8 (1M context) — design stress-testing (grill-me)</p>
+            <p><strong>Comments:</strong> This exercise was interesting because I have ground truth data for the LLM to compare to as it makes the changes. The code changes are supposed to be 0-diff, the computation is just
+            batched and streamed to disk instead of occuring all in memory. I broke this up in two tasks: first batching (0-diff), then parallelism over the batches (0-diff also, but harder for the agent to check). We only
+            got through task 1: the grill-me session was useful but lead to a lot of decision fatigue. Some of the questions felt like questions I would not have asked myself about the new layout of the code. This is bad and good,
+            some decisions genuinely improved the codebase, but some others felt like having 1 good option and 2 terrible options presented to you and should have been a no brainer.</p>
+            <p><strong>Some notes on 0-diff testing:</strong> The agent was given some test files so that it could evaluate the batched (new) implementation vs the single-shot (old) implementation. It wrote tests to run the cases
+            and compare them, and the tests seemed at first glance in-depth. It was very happy to report 0-diff between the old and new implementation for simulations using ERA5. Using HRRR, it would find a small 1e-12 difference and
+            incorrectly discarded it as "a documented issue with reprojections of HRRR data": this was tricky because it sounded plausible and in my tests I did documented a 1e-14 difference but for completely unrelated reasons! The agent
+            saw there was an explanation of something that looked like it could also explain this problem and confidently said that was it. What made it worse is that it documented this difference in the deisgn document for the new feature,
+            such that it kept on going back to it with confidence. It turns out there were two errors in was not catching in its testing, and the weird difference was one of them. I had too push back a few times explaining that we should not
+            be finding any numerical differences. We eventually made it, but it's good to clearly know when a change is supposed to be 0-diff regardless of what the agent says about it: you can then push it to find a subtle issue. 1e-12 looks
+            negligible but pointed at a deeper issue in the code...</p>
           </div>
         </div>
       </div>
