@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ash RGB Comparison — Baseline vs Best-Physics (2026-06-22)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #0f1117; color: #e2e8f0; line-height: 1.6; }
+    .header { background: #1a1d2e; border-bottom: 1px solid #2d3748; padding: 1.5rem 2rem; }
+    .header h1 { font-size: 1.4rem; color: #90cdf4; }
+    .header .meta { font-size: 0.85rem; color: #718096; margin-top: 0.3rem; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 2rem 1rem; }
+    .intro { font-size: 0.9rem; color: #a0aec0; margin-bottom: 1.75rem; }
+    .intro code { font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.85em; background: #0a0c14; border: 1px solid #2d3748; padding: 0.1em 0.4em; border-radius: 3px; }
+    .column { display: flex; flex-direction: column; gap: 2rem; }
+    figure { background: #1a1d2e; border: 1px solid #2d3748; border-radius: 8px; padding: 1rem 1.25rem 1.25rem; }
+    figure.baseline { border-left: 3px solid #4299e1; }
+    figure.best { border-left: 3px solid #48bb78; }
+    figcaption { margin-bottom: 0.75rem; }
+    figcaption .label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.2rem 0.6rem; border-radius: 4px; }
+    figure.baseline .label { background: #2b4c7e; color: #90cdf4; }
+    figure.best .label { background: #2d3b2d; color: #68d391; }
+    figcaption .title { display: block; margin-top: 0.5rem; font-size: 0.95rem; color: #e2e8f0; }
+    figcaption .run { font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.8rem; color: #718096; }
+    figcaption .stats { font-size: 0.8rem; color: #a0aec0; margin-top: 0.2rem; }
+    img { display: block; width: 100%; height: auto; border-radius: 6px; background: #fff; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Ash RGB Comparison &mdash; Baseline vs Best-Physics</h1>
+    <div class="meta">Session date: 2026-06-22 &nbsp;&bull;&nbsp; Project: crtm-experiments / optimization-color &nbsp;&bull;&nbsp; GOES-19 ABI &ldquo;ash&rdquo; RGB, k=8 quadrant</div>
+  </div>
+  <div class="container">
+    <p class="intro">
+      Each panel is the synthetic <strong>simulated</strong> ash RGB (left) next to the <strong>reference GOES-19</strong> observation (right).
+      The two configs differ only in cloud parametrization: the baseline uses the default CRTM <code>average</code> overlap with gridbox-mean effective radii,
+      while the best-physics run adds the <code>--in-cloud-reff</code> correction and the <code>maxran</code> cloud-overlap fix.
+    </p>
+    <div class="column">
+      <figure class="baseline">
+        <figcaption>
+          <span class="label">Baseline</span>
+          <span class="title">Wyser ice reff + snow-as-ice (default <code>average</code> overlap)</span>
+          <span class="run">runs/wyser_snow_k8/compare.png</span>
+          <div class="stats">C14 cloud bias +15.7 K &nbsp;&bull;&nbsp; R=C15&minus;C14 MAE 1.22 &nbsp;&bull;&nbsp; RGB MAE 0.1330</div>
+        </figcaption>
+        <img src="img/ash-baseline-wyser_snow_k8.png" alt="Simulated vs GOES-19 ash RGB — baseline Wyser + snow-as-ice run">
+      </figure>
+      <figure class="best">
+        <figcaption>
+          <span class="label">New</span>
+          <span class="title">Best-physics: Wyser + snow-as-ice + in-cloud reff + <code>maxran</code> overlap</span>
+          <span class="run">runs/wyser_snow_incloud_maxran_k8/compare.png</span>
+          <div class="stats">C14 cloud bias +3.3 K &nbsp;&bull;&nbsp; R=C15&minus;C14 MAE 0.89 &nbsp;&bull;&nbsp; RGB MAE 0.1324</div>
+        </figcaption>
+        <img src="img/ash-bestphysics-wyser_snow_incloud_maxran_k8.png" alt="Simulated vs GOES-19 ash RGB — best-physics in-cloud reff + maxran overlap run">
+      </figure>
+    </div>
+  </div>
+</body>
+</html>
