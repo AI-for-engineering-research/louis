@@ -1,0 +1,2086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Log — Cloud Effective-Radius &amp; Overlap (2026-06-22)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #0f1117; color: #e2e8f0; line-height: 1.6; }
+    .header { background: #1a1d2e; border-bottom: 1px solid #2d3748; padding: 1.5rem 2rem; }
+    .header h1 { font-size: 1.4rem; color: #90cdf4; }
+    .header .meta { font-size: 0.85rem; color: #718096; margin-top: 0.3rem; }
+    .container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+    .turn { margin-bottom: 1.5rem; }
+    .turn-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+    .role-badge { font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .role-badge.user { background: #2b4c7e; color: #90cdf4; }
+    .role-badge.assistant { background: #2d3b2d; color: #68d391; }
+    .turn-time { font-size: 0.75rem; color: #4a5568; }
+    .turn-body { background: #1a1d2e; border: 1px solid #2d3748; border-radius: 8px; padding: 1rem 1.25rem; }
+    .turn-body.user { border-left: 3px solid #4299e1; }
+    .turn-body.assistant { border-left: 3px solid #48bb78; }
+    .turn-body p { margin-bottom: 0.6rem; }
+    .turn-body p:last-child { margin-bottom: 0; }
+    .turn-body ul, .turn-body ol { margin: 0.5rem 0 0.5rem 1.5rem; }
+    .turn-body li { margin-bottom: 0.25rem; }
+    .turn-body pre { background: #0a0c14; border: 1px solid #2d3748; border-radius: 6px; padding: 0.75rem 1rem; overflow-x: auto; font-size: 0.82rem; margin: 0.5rem 0; line-height: 1.35; }
+    .turn-body code { font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.85em; }
+    .turn-body pre code { font-size: 0.82rem; }
+    .turn-body :not(pre) > code { background: #0a0c14; border: 1px solid #2d3748; padding: 0.1em 0.4em; border-radius: 3px; }
+    .turn-body strong { color: #f6e05e; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Chat Log &mdash; Cloud Effective-Radius &amp; Overlap Exploration</h1>
+    <div class="meta">Session date: 2026-06-22 &nbsp;&bull;&nbsp; Model: claude-opus-4-8 (1M context) &nbsp;&bull;&nbsp; Project: crtm-experiments / optimization-color</div>
+  </div>
+  <div class="container">
+
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>We&#x27;re picking up the cloud color optimization session. You can refer to all the context you need in optimization-color/. So far we&#x27;ve tested the base ECMWF particle schemes, and the Wyser scheme for ice crystal. We also determined that snow should be treated as ice in CRTM. I want you to investigate the liquid cloud class now clwc now. How should this variable be treated and are there better parametrizations possible than the ones implemented in effr.py and upp_effr.py. You can search the literature to find this. Log your findings and feel free to run simulations to tests your hypothesis.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>I&#x27;ll start by getting oriented — reading the optimization-color context and the current effective-radius parametrizations.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The HANDOFF.md says to read it first. Let me read all the key context files.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now let me read the current effective-radius implementations and the ADR.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me look at the loop orchestration, variables registry, and the constants to fully understand the liquid path.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me check the constants, the clwc variable registration, and how the CRTM driver consumes the liquid effective radius.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me check how clwc mass is converted into the CRTM water content (the mass path), since &quot;how clwc is treated&quot; spans both mass and effective radius.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me find where the mass mixing ratios get converted to the per-layer water path (kg/m²) that CRTM consumes.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me look at the ECMWF mass-path conversion to fully understand the clwc treatment.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>I now have the full picture of the liquid path. Let me record my initial physics analysis as a task list, then research the literature. First, let me confirm my read of the Bower implementation numerically and load the web tools.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Confirmed: the current BOWER_LIQUID returns exactly the mean volume radius r_v — it omits the Martin et al. (1994) spectral-dispersion factor k that converts r_v to the effective radius CRTM actually wants (8–14% larger). Now let me research the literature to confirm this and find the best-practice parametrizations.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Strong confirmation. The modern IFS liquid effective radius formula is r_eff = [3·E_d·(LWC+RWC) / (4π·ρ_w·k·N_d)]^(1/3) — the current BOWER_LIQUID is exactly this minus the k dispersion factor and minus the Wood (2000) drizzle enhancement E_d. Let me fetch the authoritative IFS doc to nail the exact constants.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The IFS PDF is too large to fetch directly. Let me get the exact formula and the Wood (2000) enhancement factor from the ECRAD scheme paper, which is more compact.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>I have authoritative confirmation. Let me set up task tracking and inspect how is_land flows into the liquid reff computation (Martin&#x27;s k and N_d are land/ocean-dependent, so the liquid plugin contract needs it).</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>I can fetch the ECMWF docs for you locally</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me see the exact ECMWF liquid call site to design the plugin contract, then I&#x27;ll respond to your offer.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>I have what I need to design the liquid seam and a first experiment. Let me set up task tracking.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Yes please — that would nail the exact constants. Here&#x27;s what I&#x27;m after, and what I&#x27;ve already established so I don&#x27;t duplicate.</p>
+        <p>What I&#x27;ve found so far on clwc</p>
+        <p>The core finding (a correctness gap, not a tuning knob):</p>
+        <p>CRTM&#x27;s WATER_CLOUD optical-property LUT is indexed by effective radius r_e (the ratio of the 3rd to 2nd moment of the droplet size distribution). The current BOWER_LIQUID scheme in effr.py computes</p>
+        <p>r = (3·LWC / (4π·ρ_w·N))^(1/3)</p>
+        <p>which is the mean-volume radius r_v, not r_e. I verified this numerically — the implementation&#x27;s output matches r_v to the digit. The two differ by the Martin et al. (1994) spectral-dispersion factor k:</p>
+        <p>r_e = r_v · k^(−1/3),   k = (r_v/r_e)³ &lt; 1</p>
+        <p>So the current scheme feeds CRTM droplets that are 8% (ocean) to 14% (land) too small vs. the effective radius CRTM expects. Modern IFS/ECRAD uses the complete form:</p>
+        <p>r_e = [ 3·E_d·(LWC + RWC) / (4π·ρ_w·k·N_d) ]^(1/3)</p>
+        <p>with k = 0.67 (continental/land), 0.80 (maritime/ocean) from Martin et al. 1994, N_d ≈ 50 cm⁻³ ocean / 300 cm⁻³ land, and E_d = Wood (2000) drizzle/dispersion enhancement (≳1, matters when drizzle LWC &gt; 5–10% of cloud LWC). The current code has k=1, E_d=1, and excludes RWC — i.e. it&#x27;s the IFS formula stripped of exactly the three pieces that distinguish r_e from r_v.</p>
+        <p>What would help from the local ECMWF docs</p>
+        <p>The IFS Documentation, Part IV: Physical Processes (any recent cycle — CY47R1, CY48R1, or CY49R1), specifically the radiation / cloud-optical-properties section where the liquid effective radius is defined. I want to quote-verify:</p>
+        <ol>
+          <li>The exact liquid r_e equation (esp. whether RWC is added and the precise E_d form).</li>
+          <li>The numerical k values (land/ocean) and whether they cite Martin et al. 1994.</li>
+          <li>The N_d land/ocean values (cm⁻³) and any min/max r_e clip the IFS applies.</li>
+          <li>The equation + page numbers, so the LOG/ADR citation is exact (the in-code comment currently points at CY41R2 p.103 eq. 7.54).</li>
+        </ol>
+        <p>If you can drop the PDF somewhere readable (or paste that section), I&#x27;ll pin the citation. Meanwhile I&#x27;ll proceed: I&#x27;m adding a liquid registration seam mirroring the existing ice one, implementing the Martin (1994) k-corrected scheme as a plugin, and running it at k=8 against the baseline to measure how much liquid r_e actually moves the ash BT.</p>
+        <p>My working hypothesis on the result: the k-correction makes droplets larger → slightly more transparent liquid cloud in the LWIR → marginally warmer BT — i.e. it will not relieve the +13.7 K cloud warm bias. That bias is a cloud-mass / cloud-cover story, not a liquid-r_e story. The simulation will confirm the magnitude and direction. Let me build it.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now let me build the liquid seam. First, the registry and register_liquid_reff_scheme:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now hook the registries into validation, from_scheme_name, compatibility, and compute_liquid_reff:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now from_scheme_name — route a registered liquid scheme into the liquid slot, keeping ECMWF-like for the others (mirroring the ice plugin branch):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now the dispatch in compute_liquid_reff — check the plugin registry first (like compute_ice_reff does), passing is_land:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Seam done. Now the Martin (1994) liquid scheme and its plugin adapter.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me verify the Martin physics reproduces the expected numbers and that the seam wires up end-to-end (registration → from_scheme_name → compute_liquid_reff):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Physics and seam both verified. Let me confirm I didn&#x27;t break the package — run the effr-related tests:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now wire run_iteration.py to select the right plugin per scheme (currently it hardcodes the Wyser plugin for any non-builtin). Let me make it map scheme → plugin, and allow composing the Wyser+Martin case later:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now let me run the Martin-liquid experiment at k=8. First confirm the coarse grid exists:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Everything&#x27;s in place. Let me run the Martin-liquid iteration (k=8, ECMWF ice/rain/snow + Martin liquid):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The Martin result is nearly identical to baseline (C14 cloud bias +13.73 in both; RGB MAE 0.1419 in both). Before I conclude &quot;liquid r_e doesn&#x27;t matter,&quot; I must rule out the scheme silently no-op&#x27;ing. Let me confirm clwc_radius actually changed between the two runs and quantify where liquid cloud exists:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The scheme is genuinely active (clwc_radius ratio 1.093, in the expected 1.077–1.143 band) yet the BT barely moved. The diagnostics explain why, and also surface a second, larger issue: the liquid r_e comes out unphysically small (mean 3.4 µm, p5 0.72 µm) because it&#x27;s computed from gridbox-mean LWC with no floor.</p>
+        <p>To make the &quot;liquid r_e is not a lever&quot; conclusion airtight, let me bound it: force liquid r_e to extreme constants (4 µm and 30 µm — the full plausible span) and see if even that moves cloud BT. I&#x27;ll write a labeled diagnostic plugin:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now run both bounds (4 µm and 30 µm — the full plausible droplet span):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>The IFS CY49R1 is available in literature/, page 22 is where the clouds parametrizations descriptions starts for the radiation scheme</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The 4 µm bound came back essentially identical to baseline (C14 cloud +13.72 vs +13.73). The 30 µm run got cut by the timeout. Let me re-run it in the background and, per your message, read the IFS CY49R1 doc you placed in literature/.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The user said page 22 has the cloud parametrizations for the radiation scheme. The PDF is large, so let me read the relevant pages directly.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>PDF rendering needs poppler. Let me extract the text from pages ~22–26 with a Python PDF reader via uvx:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>This is the authoritative source — exactly what I needed. Let me capture the key facts before updating the scheme:</p>
+        <p>IFS CY49R1 §2.4.2(a), eq. 2.55: r_e = (3·LWC / (4π·ρ_w·k·N_d))^(1/3) with r_e³ = r_v³/k — confirms my implementation. But the exact IFS k comes from the dispersion k = (1+D²)³/(1+3D²)²: ocean D=0.33 → k=0.77, land D=0.43 → k=0.69 (close to but not identical to the raw Martin 0.80/0.67 I used).</p>
+        <p>Three more correctness facts the current BOWER_LIQUID omits:</p>
+        <ol>
+          <li>In-cloud LWC: &quot;in-cloud water contents are used in all the effective radius equations (i.e. gridbox mean divided by the cloud fraction)&quot; — the pipeline uses gridbox-mean LWC → this is why I saw sub-µm droplets.</li>
+          <li>r_e clipped to [4, 30] µm (eq. 2.56).</li>
+          <li>Wood (2000) E_d + RWC drizzle enhancement (eq. 2.56).</li>
+        </ol>
+        <p>Plus a bonus validation: eq. 2.61 — IFS ice uses Sun &amp; Rikus (1999), and &quot;the snow water content is added to the ice... the same optical properties are currently assumed for both ice and snow&quot; — independent confirmation of the snow-as-ice decision.</p>
+        <p>Let me update the Martin scheme to the exact IFS k values and the [4,30] µm clip, and check the background run:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now I have the full bracket. Even forcing liquid r_e across the entire plausible span 4 µm → 30 µm (a 7.5× change):</p>
+        <pre>┌─────────────────────┬────────────┬───────────┬────────────────┬────────┐
+│         run         │ C14 cloud  │ C14 cloud │   G=C14−C11    │  RGB   │
+│                     │    bias    │    MAE    │   cloud MAE    │  MAE   │
+├─────────────────────┼────────────┼───────────┼────────────────┼────────┤
+│ baseline (BOWER     │     +13.73 │     16.90 │           1.96 │ 0.1419 │
+│ r_v, ~3.4 µm)       │            │           │                │        │
+├─────────────────────┼────────────┼───────────┼────────────────┼────────┤
+│ Martin (r_e, ~+9%)  │     +13.73 │     16.90 │           1.96 │ 0.1419 │
+├─────────────────────┼────────────┼───────────┼────────────────┼────────┤
+│ const 4 µm          │     +13.72 │     16.90 │           1.98 │ 0.1431 │
+├─────────────────────┼────────────┼───────────┼────────────────┼────────┤
+│ const 30 µm         │     +13.64 │     16.86 │           1.87 │ 0.1383 │
+└─────────────────────┴────────────┴───────────┴────────────────┴────────┘</pre>
+        <p>C14 cloud bias moves 0.08 K across the entire span — conclusively not the warm-bias lever. Now let me make the Martin scheme IFS-faithful (exact k=0.77/0.69 + [4,30] µm clip) so it&#x27;s promotable, then re-run it as the definitive artifact:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Clip and k values correct (sub-physical tail → 4 µm, zero stays 0). Now the definitive IFS-faithful liquid run:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>As expected — IFS-faithful liquid is again baseline-identical (C14 cloud +13.71 vs +13.73). The physics-correct treatment confirms the conclusion. Now let me run the full package test suite to confirm the seam edits are safe, then document.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>All 48 tests pass. Now let me write up the findings. First, a synthesis section in the LOG, then update REFERENCES with the IFS CY49R1 citations:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now update REFERENCES.md with the authoritative IFS CY49R1 / Martin / Wood citations:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Update the ADR — the &quot;registry covers ice only&quot; consequence is now outdated since I added the liquid seam:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Add the MARTIN run example to the REFERENCES &quot;Running the loop&quot; section:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me update the persistent memory with this finding. First read the existing cloud-matching memory:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Done. Here&#x27;s the summary of the clwc investigation.</p>
+        <p>How clwc should be treated</p>
+        <p>Mass path (clwc → CRTM Water_Content): already correct — gridbox-mean specific concentration integrated over pressure thickness to kg/m². No change needed.</p>
+        <p>Effective radius (clwc → CRTM Effective_Radius): the current BOWER_LIQUID has a real correctness gap. CRTM&#x27;s WATER_CLOUD LUT is indexed by the droplet effective radius r_e (IFS CY49R1 eq. 2.53), but BOWER computes (3·LWC/4π·ρ_w·N)^(1/3) = the mean-volume radius r_v (I verified it matches r_v to the digit). It omits three things the IFS does (CY49R1 §2.4.2, the doc you supplied):</p>
+        <ol>
+          <li>The Martin (1994) dispersion factor k — r_e = r_v·k^(−1/3), with k=0.77 ocean / 0.69 land (eq. 2.55). → BOWER runs ~9–13% too small.</li>
+          <li>The [4, 30] µm clip (eq. 2.56) — without it, fed gridbox-mean LWC, BOWER produces sub-micron &quot;droplets&quot; (p5 = 0.72 µm in this scene).</li>
+          <li>In-cloud LWC (gridbox-mean ÷ cloud fraction) and the Wood (2000) E_d+RWC drizzle term.</li>
+        </ol>
+        <p>What I built and ran</p>
+        <ul>
+          <li>A liquid registration seam in effr.py (register_liquid_reff_scheme, mirroring the existing ice seam; contract adds is_land) — all 48 package tests pass.</li>
+          <li>A MARTIN plugin (martin_liquid.py/martin_plugin.py) implementing IFS eq. 2.55 with the exact k values + [4,30] µm clip. The in-cloud-LWC and Wood E_d pieces are documented as the remaining gap (each needs another field threaded into the call).</li>
+          <li>Four logged runs at k=8.</li>
+        </ul>
+        <p>The key empirical finding</p>
+        <p>Liquid r_e is not a lever for this ash scene. Forcing r_e across the entire plausible span (4 µm → 30 µm, a CONSTLIQ diagnostic) moves the cloud-masked C14 bias by only 0.08 K; the physically-correct Martin/IFS change moves it 0.02 K — against a +13.7 K warm bias. Reason: 62% of liquid profiles are already LWIR-opaque (blackbody, r_e-insensitive) and 73% carry ice above the liquid, which dominates the ash bands. So the IFS-faithful MARTIN scheme is the right liquid default on correctness grounds, not because it improves the match — the warm bias is a cloud-mass/cover/top problem, not liquid microphysics.</p>
+        <p>Bonus: IFS CY49R1 eq. 2.61 independently validates your snow-as-ice decision (&quot;snow water content is added to the ice… same optical properties&quot;).</p>
+        <p>All of this is written up in LOG.md (&quot;Synthesis — liquid cloud (clwc) investigation&quot;), with citations in REFERENCES.md, the seam update in ADR 0001, and the finding saved to memory.</p>
+        <p>Two notes on your doc: pdftoppm isn&#x27;t installed so the Read tool can&#x27;t render PDF pages — I extracted the text with uvx --from pypdf instead (works fine). And thanks for dropping CY49R1 locally; it let me pin the exact k/clip/eq numbers rather than rely on search snippets. Want me to pursue the warm bias next via ice opacity / cloud cover (the actual lever), or promote MARTIN into the package now?</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>You mentioned that the effective radius of liquid droplets is computed with the in cloud (not grid box averaged) specific concentration. Did you apply that fix to clwc? And is that same fix relevant to ciwc? You also mentioned that in eq. 2.56, RWC is added to LWC to compute the radius, did you this? And it seems that unlike IWC_radiation = IWC + SWC, RWC is not used anywhere (per page 23 of the document_)</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Good, pointed questions — let me answer them precisely, and I&#x27;ll be honest about what I did vs. documented. First the direct answers, then I want to verify the cloud-fraction consistency question against the actual code rather than hand-wave it.</p>
+        <p>Short answers:</p>
+        <ul>
+          <li>In-cloud LWC for clwc reff — No, I did not apply it. martin_liquid.py uses gridbox-mean LWC = q_liquid·rho, identical to BOWER. I only added the k factor and the [4,30] µm clip; the in-cloud ÷cfrac is documented in the module/LOG as a deferred gap, not implemented.</li>
+          <li>RWC added to LWC — No, I did not. Also documented as deferred.</li>
+        </ul>
+        <p>Both are real. But before I tell you &quot;yes, go implement in-cloud for ciwc too,&quot; I need to check how this pipeline&#x27;s CRTM actually uses cloud fraction — because in-cloud reff is only consistent with a particular treatment of the water-content mass. Let me read the code.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>CRTM uses Cloud_Fraction for cover. The consistency hinges on whether CRTM&#x27;s cloudy sub-column scales Water_Content by cloud fraction. Let me read the cloud-cover machinery:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Found the key line — CRTM_CloudCover_Define.f90:516. Let me read its context to be precise about what CRTM reconstructs:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>This nails it. Let me read the exact lines for the answer, then I have everything:</p>
+        <p>The decisive code is CRTM_CloudCover_Define.f90:513-517: IF (self%Total_Cloud_Cover &gt; MIN_COVERAGE_THRESHOLD) THEN</p>
+        <pre>   DO n = 1, n_clouds
+      atm%Cloud(n)%Water_Content(1:n_layers) =
+atm%Cloud(n)%Water_Content(1:n_layers) / self%Total_Cloud_Cover
+   END DO
+END IF</pre>
+        <p>So CRTM expects gridbox-mean Water_Content and internally reconstructs the in-cloud mass by dividing by the column cloud cover — but it never touches Effective_Radius. That&#x27;s the smoking gun for your question. Let me refine the docs to capture this, then give you the precise answers.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>All documented. Here are the precise answers.</p>
+        <ol>
+          <li>In-cloud LWC for clwc — No, I did not apply it</li>
+        </ol>
+        <p>martin_liquid.py computes LWC = q_liquid·rho from the gridbox-mean clwc, exactly like BOWER. I only added the k factor and the [4,30] µm clip. The ÷cfrac is documented as a gap, not implemented. (For liquid it&#x27;s moot anyway — the 4→30 µm bracket showed reff doesn&#x27;t move this scene&#x27;s BT.)</p>
+        <ol start="2">
+          <li>Is the same fix relevant to ciwc? — Yes, and it matters more there</li>
+        </ol>
+        <p>IFS uses in-cloud water content in all effective-radius equations, so ECMWF_ICE and WYSER have the identical flaw: they compute the ice reff from gridbox-mean ciwc, never ÷cfrac. I verified in the CRTM source that this is an internal inconsistency, not just a deviation from IFS:</p>
+        <ul>
+          <li>In the fractional-coverage path CRTM reconstructs the in-cloud mass itself — CRTM_CloudCover_Define.f90:516 does Water_Content = Water_Content / Total_Cloud_Cover — but it never scales Effective_Radius.</li>
+          <li>So CRTM computes the cloudy-column optical depth from in-cloud mass while the pipeline hands it a reff derived from gridbox-mean mass. Mismatched.</li>
+        </ul>
+        <p>The fix is to compute reff from WC/cfrac per layer (with a cfrac floor for the cfrac=0, WC&gt;0 cells the driver already flags). This is the most impactful correctness item I&#x27;ve found, and it lands on ice — the actual warm-bias lever. Note the likely direction, though: larger in-cloud IWC → larger ice reff → less opacity per unit mass → warmer tops, i.e. it probably worsens the +13.7 K bias even though it&#x27;s more correct. Worth implementing and reporting honestly (same spirit as the liquid k result). It needs cfrac threaded into the reff calls, so it touches the already-explored ECMWF/Wyser ice path — I&#x27;d run it as its own iteration.</p>
+        <ol start="3">
+          <li>RWC added to LWC — No, and your page-23 point says it shouldn&#x27;t be ported naively</li>
+        </ol>
+        <p>I did not add the +RWC/Wood E_d term. And you&#x27;ve spotted the key asymmetry:</p>
+        <pre>┌─────────┬──────────────────────────────────┬────────────────────────────┐
+│ species │     IFS radiation treatment      │       this pipeline        │
+├─────────┼──────────────────────────────────┼────────────────────────────┤
+│         │ added to ice mass: IWC_rad = IWC │                            │
+│ snow    │  + SWC → drives ice opacity and  │ --snow-as-ice mirrors it ✓ │
+│         │ ice reff                         │                            │
+├─────────┼──────────────────────────────────┼────────────────────────────┤
+│         │ appears only in the liquid reff  │ crwc is its own radiative  │
+│ rain    │ (eq. 2.56 +RWC, Wood E_d); &quot;not  │ species (RAIN_CLOUD +      │
+│         │ used elsewhere in the radiation  │ ECMWF_RAIN reff)           │
+│         │ scheme&quot;                          │                            │
+└─────────┴──────────────────────────────────┴────────────────────────────┘</pre>
+        <p>IFS folds RWC into the liquid effective radius precisely because its radiation has no separate rain category — that&#x27;s rain&#x27;s only radiative footprint there. This pipeline already scatters/absorbs rain as RAIN_CLOUD, so adding +RWC to the liquid reff here would double-count rain&#x27;s radiative effect. So omitting it isn&#x27;t merely a deferred gap — it&#x27;s the correct choice given how this pipeline represents rain. I&#x27;ve corrected the framing in martin_liquid.py and LOG.md to say exactly that.</p>
+        <p>--- Net: the only correctness item among these three that&#x27;s both real and worth acting on is in-cloud ÷cfrac, for ciwc. Want me to implement it — thread cfrac into the reff calls and run an in-cloud ice iteration (ECMWF and Wyser) to measure the effect on the warm bias?</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>yes, implement in-cloud ÷cfrac and run the ice iteration. Implement the in-cloud  cfrac correction for both liquid and ice clouds</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Good. This is a more substantial change — threading cfrac into the reff computation. Let me plan it against the actual code structure first.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>I need to see get_var and the cloud-fraction variable definition to know how to thread cfrac in:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>self.get_var(&quot;cfrac&quot;) maps the crtm name to the source name (cc/FRACCC) automatically, so I can fetch gridbox cloud fraction source-agnostically. The cleanest design: apply ÷cfrac to mmr_specie in convert_units before it reaches the reff schemes — that way every ice/liquid scheme (including the Wyser/Martin plugins) gets in-cloud water content transparently, with no change to scheme signatures. I&#x27;ll make it a toggle mirroring --snow-as-ice. Let me trace how snow_as_ice is threaded:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me find where effr_params/is_land get assigned onto the AtmData instance — that&#x27;s my injection point for the toggle:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The in-cloud division needs a cfrac floor for the pathological cfrac≈0, WC&gt;0 cells the driver flagged. Let me check CRTM&#x27;s coverage threshold to pick a principled floor, and confirm the ice schemes&#x27; reff clips bound the result:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>This is a key finding already: ERA5 cloud fraction in this scene is very low (ice cfrac median 0.12, liquid 0.05), so ÷cfrac is a large correction (8–20×) — much bigger than the k factor. Good reason the user wants it tested. Only ~30–54 cells have cfrac&lt;1e-6 with condensate, so CRTM&#x27;s own MIN_COVERAGE_THRESHOLD=1e-6 is a principled, non-arbitrary divisor floor. Let me set up tasks and read the threading sites.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>I have the full threading map. Let me implement, mirroring snow_as_ice. Start with the helper in unit_conversion.py:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now the AtmData attribute in metdata.py:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now apply the correction in ecmwf.py convert_units (ice + liquid branches). Let me update the imports and both branches:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me read both import blocks to add to_in_cloud:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now the ECMWF ice + liquid branches. I&#x27;ll apply to_in_cloud to mmr_specie when the toggle is set:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now the HRRR branches (HRRR passes mass mixing ratios directly):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>HRRR feeds mass mixing ratio and number concentration — both are gridbox-mean (diluted by cfrac), so in-cloud mode must scale both by 1/cfrac to stay consistent:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now thread the toggle: make_crtm_input in crtm_inputs.py:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now streaming.py — add the param and pass it to make_crtm_input:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now cli.py — add the --in-cloud-reff flag and thread it to both call sites:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now add in_cloud_reff to the command function signature, echo, and both call sites:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now wire run_iteration.py to pass the flag and record it. Let me update build_inputs_cmd, main, and the log header:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now let me verify the whole chain: run package tests + a quick unit check that --in-cloud-reff actually inflates reff as expected:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Tests pass, helper works. Now run the in-cloud iterations. I&#x27;ll run three: ECMWF-like+in-cloud, and the Wyser+snow+in-cloud (the ice lever), plus mark task progress:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>ECMWF in-cloud result: C14 cloud bias +13.73 → +13.93 (warmer, as predicted — bigger crystals, less opacity), but the ice-sensitive band-diffs improve (R MAE 1.53→1.49, G 1.96→1.93, RGB 0.1419→0.1366). Mixed, as expected. Now the key one — Wyser+snow+in-cloud (the ice lever):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now let me verify the mechanism is genuinely active — confirm the ice reff inflated and the mass paths are untouched, and check how much the reff hits the Wyser ceiling:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Excellent — this is a clean, mechanistically clear result. Key confirmations:</p>
+        <ul>
+          <li>Mass paths identical (max diff 0.000e+00) — in-cloud touches only reff, exactly as designed.</li>
+          <li>Liquid reff 3.38 → 8.52 µm (×2.5) — the in-cloud fix lifts the unphysical sub-µm droplets into the realistic range (reff ∝ LWC^⅓, LWC ×~19).</li>
+          <li>Wyser ice reff only 56 → 61 µm (×1.09) — because Wyser is logarithmic in IWC, so even ×8.5 in-cloud IWC barely moves it.</li>
+        </ul>
+        <p>Let me write up the synthesis and comparison:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now run the full test suite once more after all the threading changes, and update memory:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Done. Here&#x27;s what I implemented and what the ice iterations showed.</p>
+        <p>Implementation — --in-cloud-reff (liquid + ice)</p>
+        <p>Effective radii now optionally come from the in-cloud water content (gridbox-mean ÷ cloud fraction), per IFS CY49R1 §2.4.2, via a toggle that mirrors --snow-as-ice:</p>
+        <ul>
+          <li>unit_conversion.to_in_cloud() — divides by max(cfrac, 1e-6); the floor is CRTM&#x27;s own MIN_COVERAGE_THRESHOLD (a principled, non-arbitrary value — below it CRTM treats the cell as clear), so it&#x27;s not a tuning knob.</li>
+          <li>Applied in the CloudIceRadius/CloudLiquidRadius branches of ecmwf.py and hrrr.py (HRRR scales both mass and number concentration, since both are gridbox-mean).</li>
+          <li>Threaded in_cloud_reff through make_crtm_input → streaming → cli (--in-cloud-reff) → run_iteration.py. Default off; 48/48 tests pass.</li>
+          <li>Mass paths are untouched — verified |Δciwc| = |Δclwc| = 0. Only the radius changes; CRTM still does its own in-cloud mass reconstruction (÷Total_Cloud_Cover).</li>
+        </ul>
+        <p>What the ice iterations showed</p>
+        <p>This scene&#x27;s cloud fraction is low (ice median 0.12, liquid 0.05), so ÷cfrac is a big multiplier on content — but its effect on reff depends on the scheme:</p>
+        <pre>┌────────────────────┬────────────┬──────────┬────────────────┬─────────┐
+│        run         │   scheme   │ in-cloud │ C14 cloud bias │ RGB MAE │
+├────────────────────┼────────────┼──────────┼────────────────┼─────────┤
+│ baseline           │ ECMWF      │ no       │         +13.73 │  0.1419 │
+├────────────────────┼────────────┼──────────┼────────────────┼─────────┤
+│ ecmwf_incloud      │ ECMWF      │ yes      │         +13.93 │  0.1366 │
+├────────────────────┼────────────┼──────────┼────────────────┼─────────┤
+│ wyser_snow         │ WYSER+snow │ no       │         +15.70 │  0.1330 │
+├────────────────────┼────────────┼──────────┼────────────────┼─────────┤
+│ wyser_snow_incloud │ WYSER+snow │ yes      │         +15.87 │  0.1289 │
+└────────────────────┴────────────┴──────────┴────────────────┴─────────┘</pre>
+        <ul>
+          <li>Liquid reff: 3.4 → 8.5 µm (×2.5) — the in-cloud fix lifts the unphysical sub-µm droplets into a realistic range. Real correctness win, but (as established) immaterial to the BT.</li>
+          <li>Wyser ice reff: only 56 → 61 µm (×1.09) — Wyser is logarithmic in IWC, so even ×8.5 in-cloud IWC barely moves it. (The ECMWF ice scheme, ∝IWC^⅓, responds more — which is why ecmwf_incloud warms slightly more relative to its baseline.)</li>
+        </ul>
+        <p>The finding</p>
+        <p>In-cloud reff makes the absolute cloud BT slightly warmer (C14 cloud bias +0.17–0.20 K — the predicted direction: bigger particles → less opacity per mass → warmer tops), so it worsens the +13.7 K warm bias rather than helping it. It does modestly improve the ash color (RGB MAE → 0.1289 for Wyser+snow+in-cloud, the best yet) and the ice-sensitive R band.</p>
+        <p>Net conclusion across all the reff work: the warm bias is not a particle-size problem — not liquid reff (Martin k), not ice reff (via in-cloud). It&#x27;s a cloud-mass / cloud-cover / cloud-top problem. The in-cloud correction is nonetheless the physically-correct treatment and improves color, so I&#x27;d keep --in-cloud-reff + Martin liquid on as the correct defaults.</p>
+        <p>All logged to LOG.md (&quot;Synthesis — in-cloud effective radius&quot;) and saved to memory. The natural next lever — the actual one — is cloud cover/overlap and mass: e.g. how the driver applies a single cfrac to all species without overlap, and whether ERA5&#x27;s fractional low cfrac is under-producing opaque high cloud. Want me to dig into that next?</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>Can you commit your progress with your updated logs and handoff document? Then you can move on to looking into how the cloud fraction applies to species / opacity</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>I&#x27;ll update the HANDOFF document first, then commit, then start the cloud-fraction investigation. Let me re-read the current HANDOFF to make precise edits:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me read the rest of the HANDOFF to update sections 4–8:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now I&#x27;ll update sections 4–8. First, &quot;How to run&quot; (add Martin + in-cloud commands and flags):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now update section 7 (results table) and section 8 (next steps — cloud fraction now #1):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>HANDOFF updated. Now let me review what will be committed:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me check the .gitignore and what the prior commit tracked, so I commit the right things (and exclude the heavy run outputs / 58 MB PDF and the pre-existing unrelated untracked files):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The .gitignore already excludes the heavy .nc/.npy from runs (keeping the PNG/JSON/nml record). The 58 MB IFS PDF in literature/ isn&#x27;t ignored though — I shouldn&#x27;t commit that. Let me add it to .gitignore, then stage only my work (not the pre-existing unrelated untracked files like .claude/, CLAUDE.md, scratch_e2e/):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Staging is clean — exactly my work (heavy .nc/.npy auto-excluded, pre-existing unrelated untracked files left alone). Committing:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Committed as 78ebec1. Now let me move on to the cloud-fraction / opacity investigation. Let me clean up the task list and set up the new line of work:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The driver sets one Cloud_Fraction per layer (all species share it) and sets no overlap → CRTM falls back to DEFAULT_OVERLAP_ID = AVERAGE_OVERLAP. Let me read how AVERAGE overlap builds Total_Cloud_Cover and how the forward model weights cloudy vs clear:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>This is the key mechanism. Compute_Average_Overlap sets:</p>
+        <p>Total_Cloud_Cover = Σ(cf·lwc) / Σ(lwc) — the mass-weighted mean cloud fraction over the column. Then the forward model returns R = (1−TCC)·R_clear + TCC·R_cloudy. With this scene&#x27;s low cfrac, TCC will be small → the scene is weighted heavily toward warm clear-sky. Let me quantify TCC per profile from the actual input and test this directly:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Confirmed: over cloudy profiles, Total_Cloud_Cover (mass-weighted mean cfrac) has median 0.23, and the simulated radiance is on average ~70% clear-sky-weighted — even a perfectly cold opaque cloud column is diluted by ~70% warm clear-sky. This is almost certainly the dominant driver of the +13.7 K warm bias.</p>
+        <p>Let me prove it directly with a diagnostic: take the baseline input, force cfrac=1 where condensate exists (overcast), re-run the driver (same masses, same reff), and measure how much the cloud cools:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Decisive. Forcing cfrac=1 (overcast) swings C14 cloud bias from +13.7 K → −11.0 K — a ~25 K swing, vs ≤0.2 K for every reff change. The warm bias is overwhelmingly a cloud-cover/weighting effect. And it overshoots to cold, meaning the ERA5 cloud masses are roughly fine — it&#x27;s the cover weighting diluting them.</p>
+        <p>One thing jumps out: the driver doesn&#x27;t set an overlap, so CRTM defaults to AVERAGE overlap, whose TCC = mass-weighted mean cfrac is the lowest of all the overlap schemes. Standard meteorological practice (and the IFS itself) uses maximum-random / exponential-random. Let me quantify how much the overlap choice alone controls total cover here:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The overlap choice alone roughly doubles total cover (AVERAGE 0.30 → MAX-RANDOM 0.52), halving the clear-sky dilution. CRTM&#x27;s default AVERAGE overlap is the least-cloud option and is non-standard (IFS/RTTOV use exponential/maximum-random). Let me check whether the overlap is settable without a code change, so I know what a fix would entail:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The overlap is read from opt%Overlap_Id (a CRTM Options field) — so it&#x27;s settable without touching CRTM internals. Let me confirm its default and how the driver sets up opt:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The picture is complete. The driver creates opt but never sets opt%Overlap_Id, so it stays at DEFAULT_OVERLAP_ID = AVERAGE. A fix is a small, principled driver change (opt%Overlap_Id = CloudCover_MaxRan_Overlap(), or expose it via the &amp;config namelist) — and CRTM already ships the setters. Let me log this investigation:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Investigation complete and committed-progress is in place. Here&#x27;s what I found.</p>
+        <p>How cloud fraction couples to opacity — and why it&#x27;s the warm bias</p>
+        <p>The chain (code-traced):</p>
+        <ol>
+          <li>The driver assigns one cfrac per layer, shared by all species, and sets no overlap (met_profile.f90:261).</li>
+          <li>So CRTM falls back to its default AVERAGE overlap (opt%Overlap_Id is never set → DEFAULT_OVERLAP_ID = AVERAGE).</li>
+          <li>AVERAGE overlap sets Total_Cloud_Cover = Σ(cf·WC)/Σ(WC) — the mass-weighted mean cloud fraction.</li>
+          <li>The forward model returns R = (1−TCC)·R_clear + TCC·R_cloudy.</li>
+        </ol>
+        <p>This scene: TCC median 0.23 → the simulated radiance is ~70% clear-sky-weighted. Even a perfectly cold, opaque cloud column is diluted by ~70% warm clear-sky.</p>
+        <p>Proof (diagnostic overcast_diag_k8): re-running the baseline input with cfrac=1 where condensate exists (same masses, same reff) swings C14 cloud bias +13.7 K → −11.0 K — a ~25 K swing, vs ≤0.2 K for any reff change. It overshoots to cold, which means the ERA5 cloud masses are roughly right — the cover weighting is what dilutes them.</p>
+        <p>The smoking gun — the overlap choice: CRTM&#x27;s AVERAGE default is the least-cloud of all overlap schemes. From this scene&#x27;s cfrac field:</p>
+        <pre>┌─────────────────────────────────────┬──────────┬──────────────┐
+│               overlap               │ TCC mean │ clear-weight │
+├─────────────────────────────────────┼──────────┼──────────────┤
+│ AVERAGE (used now)                  │     0.30 │          70% │
+├─────────────────────────────────────┼──────────┼──────────────┤
+│ MAXIMUM                             │     0.49 │          51% │
+├─────────────────────────────────────┼──────────┼──────────────┤
+│ MAX-RANDOM (NWP/RTTOV/IFS standard) │     0.52 │          48% │
+├─────────────────────────────────────┼──────────┼──────────────┤
+│ RANDOM                              │     0.67 │          33% │
+└─────────────────────────────────────┴──────────┴──────────────┘</pre>
+        <p>The meteorological standard (max-random; the IFS uses exponential-random) roughly doubles total cover, which would erase a large fraction of the warm bias. So most of the bias is the non-standard AVERAGE-overlap default, not the physics.</p>
+        <p>This is a driver (Fortran) change, outside the crtm-inputs reff/mass knobs — the fix is opt%Overlap_Id = CloudCover_MaxRan_Overlap() (CRTM ships the setter; opt is created in main_weather_input.f90 but its overlap is never set). All logged to LOG.md and saved to memory. Since it&#x27;s outside the loop&#x27;s stated scope, it&#x27;s your call how to proceed:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>Expose overlap in &amp;config namelist</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>You chose exposing it via the namelist — good call, it lets us A/B the overlaps as logged iterations. Let me build that. First, understand the driver&#x27;s config + options setup.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me check which overlap symbols are public and reachable from CRTM_Module, and how the main program sets up opt:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The overlap functions are public in CRTM_CloudCover_Define but not re-exported by CRTM_Module. Let me check whether driver files can use CRTM submodules directly:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The pattern is established (netcdf_writer.f90 uses CRTM submodules directly), and opt%Overlap_Id is reachable. Let me implement. Start with config.f90 — the use, the type field, the namelist key, parsing/validation:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now the parse/validate inside the weather-input block (after the sensor/contrail handling):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now set opt%Overlap_Id from the resolved config in both weather-input mains (the config var is cfg):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now rebuild the driver:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Driver built clean (and the contrail ctest still links). Now wire run_iteration.py to write the cloud_overlap key and accept --overlap:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now record the overlap in the log header:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now the A/B test. First a sanity check — --overlap average on the baseline config should reproduce the original baseline_k8 (+13.73), validating the namelist wiring:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Sanity check passes — average reproduces baseline exactly (+13.73), and the driver confirms &quot;Cloud overlap set to &#x27;average&#x27;&quot;. Now the standard overlaps:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Surprising — maxran gave a result byte-identical to average (+13.73). That should not happen given maxran&#x27;s TCC is ~0.52 vs average&#x27;s ~0.30. Either the overlap isn&#x27;t plumbed into the radiance, or it&#x27;s not being consumed. Let me investigate how opt%Overlap_Id and the computed cloud cover actually feed the RT:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Found it — the real bug. The driver never passes Options=opt to CRTM_Forward (line 221: CRTM_Forward(atm, sfc, geo, chinfo, rts)), so my opt%Overlap_Id is set but ignored — CRTM falls back to its internal default (AVERAGE). That&#x27;s why maxran == average. Let me check the forward call sites and the CRTM_Forward Options interface:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The smoking gun: CRTM_Forward&#x27;s Options is optional and the forward driver omits it — while the K-matrix main does pass Options=opt (line 263). So forward silently used the default overlap. Let me check the K-matrix slicing pattern and mirror it in the two forward calls:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>opt(N_MAX_PROFILES) matches atm. Let me add Options=opt to both forward calls, mirroring the K-matrix pattern:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now rebuild and re-run the A/B. The average sanity check must still give +13.73 (average is the default), and maxran/random should now actually differ:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>average still reproduces baseline (+13.73) after the passthrough fix — confirming passing default Options is inert and only the overlap method changes. maxran was mid-run at timeout. Let me run the two standard overlaps with adequate time (background):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>While the overlap runs proceed in the background, let me confirm the driver change didn&#x27;t break the contrail ctest (it compiles config.f90):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>ctest needs the pixi env. Let me run it through pixi:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Contrail ctest passes — the driver change is sound. Let me check on the background overlap runs:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>While maxran and random finish in the background (~2 min), here&#x27;s the key development:</p>
+        <p>I found a real driver bug while wiring this up. The first maxran run came back byte-identical to average, which shouldn&#x27;t happen. The cause: the weather-input driver never passed Options=opt to CRTM_Forward — so the overlap (and every other Option) was silently ignored, and CRTM always used its internal default (AVERAGE). Notably the K-matrix path did pass Options=opt, so it was an inconsistency between the two modes.</p>
+        <p>Fixes applied and rebuilt:</p>
+        <ul>
+          <li>config.f90: new cloud_overlap namelist key (average|maximum|maxran|random|overcast), default maxran, validated → resolved to cfg%cloud_overlap_id.</li>
+          <li>main_weather_input.f90: set opt%Overlap_Id = cfg%cloud_overlap_id and pass Options=opt to both CRTM_Forward calls (the actual bug fix). K-matrix main also gets the overlap set.</li>
+          <li>run_iteration.py: --overlap flag, writes cloud_overlap into the namelist and logs it.</li>
+        </ul>
+        <p>Validation so far:</p>
+        <ul>
+          <li>Contrail ctest still passes.</li>
+          <li>--overlap average reproduces baseline_k8 exactly (+13.73) — confirms passing a default Options is inert, so any change from maxran/random is purely the overlap method.</li>
+        </ul>
+        <p>Let me get the maxran/random numbers.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The overlap is now actually taking effect — and the result is decisive:</p>
+        <pre>┌────────────────────┬──────────────┬─────────────┬─────────────┬────────┐
+│      overlap       │  C14 cloud   │ C14 cloud   │ C14 cloud   │  RGB   │
+│                    │     bias     │     MAE     │    RMSE     │  MAE   │
+├────────────────────┼──────────────┼─────────────┼─────────────┼────────┤
+│ AVERAGE (old       │       +13.73 │       16.90 │       22.96 │ 0.1419 │
+│ default)           │              │             │             │        │
+├────────────────────┼──────────────┼─────────────┼─────────────┼────────┤
+│ MAXRAN (new        │        −3.66 │       15.44 │       19.92 │ 0.1632 │
+│ default)           │              │             │             │        │
+├────────────────────┼──────────────┼─────────────┼─────────────┼────────┤
+│ RANDOM             │        −8.13 │       16.37 │       21.08 │ 0.1811 │
+└────────────────────┴──────────────┴─────────────┴─────────────┴────────┘</pre>
+        <p>MAXRAN nearly eliminates the warm bias (+13.7 → −3.7 K) and improves MAE and RMSE — confirming the AVERAGE-overlap default (compounded by the missing Options=opt) was the dominant cause. Note the ash color (band-diffs/RGB) gets worse, because higher opacity flattens the split-window signal — an interesting new thread. Let me kick off the combined best-physics milestone and log everything:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now let me log the overlap A/B results and the Options=opt driver bug while the milestone runs:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Milestone result — combining all correctness fixes (Wyser ice + snow-as-ice + in-cloud reff + maxran overlap):</p>
+        <pre>┌────────────────────────────────┬─────────┬───────┬───────────┬────────┐
+│                                │  C14    │ C14   │ R=C15−C14 │  RGB   │
+│             config             │ cloud   │  MAE  │    MAE    │  MAE   │
+│                                │  bias   │       │           │        │
+├────────────────────────────────┼─────────┼───────┼───────────┼────────┤
+│ baseline (ECMWF, average)      │  +13.73 │ 16.90 │      1.53 │ 0.1419 │
+├────────────────────────────────┼─────────┼───────┼───────────┼────────┤
+│ ECMWF + maxran                 │   −3.66 │ 15.44 │      1.72 │ 0.1632 │
+├────────────────────────────────┼─────────┼───────┼───────────┼────────┤
+│ best-physics                   │   +3.32 │ 13.71 │      0.89 │ 0.1324 │
+│ (Wyser+snow+in-cloud+maxran)   │         │       │           │        │
+└────────────────────────────────┴─────────┴───────┴───────────┴────────┘</pre>
+        <p>The combination is the best on every axis: warm bias +13.7 → +3.3 K, C14 MAE 16.9 → 13.7, and crucially the ice-sensitive band-diff R MAE 1.53 → 0.89. This confirms my prediction — once cover is realistic (maxran), the microphysics (Wyser + in-cloud) does meaningfully sharpen the color. Let me record the milestone and update the HANDOFF:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now update the HANDOFF status, results table, and next steps to reflect the overlap finding:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now update memory with the overlap result, then commit:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Clean staging. Committing the overlap work:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Done — committed as edd42e5. Here&#x27;s the complete arc of this investigation.</p>
+        <p>How cloud fraction applies to species/opacity — and the lever it hid</p>
+        <p>The coupling (code-traced): The driver assigns one cfrac per layer (shared by all species, no overlap set) → CRTM uses its default AVERAGE overlap, where Total_Cloud_Cover = Σ(cf·WC)/Σ(WC) (mass-weighted mean cfrac). The forward model then returns R = (1−TCC)·R_clear + TCC·R_cloudy. In this scene TCC ≈ 0.23, so the radiance was ~70% clear-sky-weighted — diluting even cold, opaque clouds toward warm clear-sky. That&#x27;s the +13.7 K warm bias.</p>
+        <p>A real bug surfaced: my first maxran run came back byte-identical to average. Cause: main_weather_input.f90 never passed Options=opt to CRTM_Forward — so the overlap (and every other Option) was silently ignored. The K-matrix path did pass it, so it was a forward-vs-K-matrix inconsistency.</p>
+        <p>What I built (driver, you authorized the namelist route):</p>
+        <ul>
+          <li>config.f90: cloud_overlap key (average|maximum|maxran|random|overcast, default maxran), validated → opt%Overlap_Id.</li>
+          <li>Both CRTM_Forward calls now pass Options=opt (the bug fix); K-matrix main also sets the overlap.</li>
+          <li>run_iteration.py --overlap; contrail ctest still passes; --overlap average reproduces baseline exactly (proving the passthrough is otherwise inert).</li>
+        </ul>
+        <p>Results (k=8, cloud-masked):</p>
+        <pre>┌─────────────────────────────────┬─────────┬──────┬────────────┬────────┐
+│                                 │  C14    │ C14  │ R=C15−C14  │  RGB   │
+│             config              │ cloud   │ MAE  │    MAE     │  MAE   │
+│                                 │  bias   │      │            │        │
+├─────────────────────────────────┼─────────┼──────┼────────────┼────────┤
+│ baseline (ECMWF, average)       │   +13.7 │ 16.9 │       1.53 │ 0.1419 │
+├─────────────────────────────────┼─────────┼──────┼────────────┼────────┤
+│ ECMWF + maxran                  │    −3.7 │ 15.4 │       1.72 │ 0.1632 │
+├─────────────────────────────────┼─────────┼──────┼────────────┼────────┤
+│ best-physics                    │    +3.3 │ 13.7 │       0.89 │ 0.1324 │
+│ (Wyser+snow+in-cloud+maxran)    │         │      │            │        │
+└─────────────────────────────────┴─────────┴──────┴────────────┴────────┘</pre>
+        <p>The finding: the warm bias was the non-standard AVERAGE overlap + the missing Options passthrough — not the cloud physics. Maxran (the RTTOV/IFS standard) alone moved it +13.7 → −3.7 K. And the prediction held: once cover is realistic, the microphysics that was immaterial at low TCC now sharpens the band-diffs — the combined config halves the R-band MAE (1.53 → 0.89) and is best on every axis.</p>
+        <p>Two commits this session: 78ebec1 (liquid + in-cloud reff) and edd42e5 (overlap + bug fix). All logged in LOG.md/HANDOFF.md and memory.</p>
+        <p>The natural next thread (now in the HANDOFF): the color/opacity trade — maxran fixes absolute BT but flattens the split-window, so the remaining gap is now a microphysics-for-color problem (ice reff habit/floor) rather than a warm-bias problem. Want me to pick that up, or run the full-res k=1 milestone of the best-physics config first?</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>Can you now investigate the cause of the flattening of the split-window? You can consider other ice microphysics schemes (other parametrizations, clipping limits) and/or ice habit parametrizations depending on ambient conditions. Feel free to search the literature with subagents as needed</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>I&#x27;ll re-orient on the current state before diving in. Let me read the key files in parallel.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me read the Wyser implementation and the LOG synthesis sections to ground the physics.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>I have the full picture now. The split-window flattening is the open thread #1: maxran made clouds more opaque, which pushes them toward blackbody and collapses the 11–12 µm differential (R=C15−C14). Within the allowed knobs, the ice effective radius is the lever — but I need to ground this empirically before theorizing, and pull the IFS-native ice reff equation we have locally.</p>
+        <p>Let me kick off three things in parallel: extract the IFS ice-reff equation from the local PDF, inspect what the best-physics run saved (so I can correlate the R residual with reff and cloud-top T), and launch a literature subagent on ice-cloud split-window physics.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>I now have the authoritative IFS ice scheme (eq 2.61/2.62, Sun &amp; Rikus 1999 / Sun 2001) extracted locally — this is the most defensible alternative to Wyser since the source data is ERA5/ECMWF. Note its key difference from Wyser: a latitude-dependent minimum effective diameter (20µm poles → 60µm equator, i.e. r_e floor ~13–39µm) and a 155µm max, with strong T-dependence.</p>
+        <p>Let me launch two background research agents (literature + CRTM ice LUT internals) and simultaneously inspect the data to ground the diagnosis empirically.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Crucial first clue: the Wyser ice reff distribution is heavily skewed large — median 71 µm, with the 75th–95th percentiles pinned near the 103 µm ceiling. Only the cold thin tops hit the small-end floor. Large particles → flat split-window. But I need to bin by cloud-top temperature to see where the flattening lives. Let me write the diagnostic.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now the diagnostic. Let me characterize where the flattening lives — binning the split-window by cloud-top temperature and correlating with the ice reff.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The data tells a richer story than &quot;uniform flattening.&quot; Let me capture it precisely before acting:</p>
+        <p>The split-window bias is regime-split, not uniform:</p>
+        <ul>
+          <li>Cold cirrus (C14 &lt; 240 K): sim R is too deep (−2.0 vs ref −1.1 at 210–220 K) and cloud tops are ~10 K too warm (sim C14 239 vs ref 229). Cold-top ice reff sits near the Wyser floor (~21 µm).</li>
+          <li>Warm/thin cirrus (C14 &gt; 250 K): sim R is too flat (−1.1 vs ref −1.5 to −2.0). These are the lowest-IWP (~214 g/m², thinnest) pixels — exactly where the semi-transparent arch should be strongest, and the sim suppresses it. Sim variance is compressed (std 1.1 vs ref 1.3).</li>
+        </ul>
+        <p>And the lever is confirmed monotone: holding the bin, larger cloud-top reff → less negative R. So reff is the split-window knob, but Wyser&#x27;s reff↔regime mapping is working against the data in both tails.</p>
+        <p>Let me see exactly where ice reff is computed so I can thread latitude (the IFS scheme needs it for its floor) and check the call site.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>self.is_land is available at the call site, so latitude likely is too. The IFS scheme&#x27;s latitude-dependent floor matters here — my hand-calc shows for mid-latitude cold cirrus the raw Sun-Rikus D_e (~26 µm) gets clamped up to the ~50 µm floor → r_e ~33 µm, larger than Wyser&#x27;s ~21 µm cold tops. That would directly reduce the cold over-deepening I just found. So I need latitude threaded. Let me confirm the attributes.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The CRTM agent surfaced a major structural finding: CRTM uses Mie spheres for ICE_CLOUD by default — but it also supports non-spherical DDA/ARTS habits (bullet rosettes, columns, plates, aggregates) selectable per-cloud via Cloud%Type + an alternate CloudCoeff file. That is exactly the &quot;ice habit depending on ambient conditions&quot; lever the user named, and Mie-sphere ice is a known, structural cause of split-window mismatch. The IR reff table clamps (no extrapolation) over ~0.5 µm–10 mm, so our reff range is clean.</p>
+        <p>Let me check three things in parallel: whether the DDA CloudCoeff file is actually present, how the driver sets Cloud%Type, and the is_land/latitude attributes.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The DDA habit coefficient files are present (CloudCoeff_DDA_Moradi_2022.nc4, ..._2024.nc4) and CRTM defines the non-spherical habit types (PlateType1, ColumnType1, SixBulletRosette, EvansSnowAggregate…). So the user&#x27;s &quot;ice habit depending on ambient conditions&quot; lever is genuinely actionable — and Mie-sphere ice is the structural reason the split-window is hard to match. This is the highest-value avenue.</p>
+        <p>Let me set up tasks and find the is_land/latitude plumbing so I can thread latitude for the IFS scheme.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now I understand the plumbing: is_land is set on the AtmData object in crtm_inputs.py:341; latitude is available as a profile coord. I&#x27;ll thread latitude the same way for the IFS scheme&#x27;s latitude-dependent floor. Let me set up task tracking and check the test surface before touching the contract.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>No test touches the ice plugin contract — safe to extend. Let me set up task tracking, then implement.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Diagnosis is in hand. Now Task 11 — thread latitude and implement the IFS Sun-Rikus scheme. Let me make the seam edits.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now extend compute_ice_reff to thread latitude to ice plugins, and update the contract comment.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now pass latitude at the ecmwf.py call site and update wyser_plugin to accept (ignore) it:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me make the HRRR call site consistent too, and verify the package still imports/tests cleanly.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now the IFS Sun-Rikus scheme. Let me write the physics and the plugin.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>I left a broken placeholder helper in there. Let me remove it — the plugin will compute IWC directly, mirroring wyser_plugin.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now the plugin that registers SUNRIKUS and computes IWC:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me sanity-check the Sun-Rikus physics with representative values and confirm the package still imports with the threaded latitude.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Sun-Rikus behaves correctly — the latitude floor binds in cold cirrus (r_e ~33 µm at 40°N vs Wyser&#x27;s ~21 µm), exactly the direction to reduce the cold over-deepening. Let me register it in the loop runner and kick off the run in the background (each run ~6 min).</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Run is going in the background. Let me update tasks and use the ~6 min to investigate the DDA habit coefficient files (Task 12) — the structurally most important lever.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Heredoc nesting broke that. Let me retry cleanly with the test env (which has xarray) and absolute paths.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Key question for the habit lever: do the DDA files actually carry non-spherical IR optics, or only microwave? The variable names hint the DDA habits are MW-only (DDA_Habits_S_MW), with the IR part indexed by reff + a 4-point density axis. Let me confirm — this determines whether an ice-habit lever even exists in the IR for this CRTM build.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Decisive structural findings on the habit lever:</p>
+        <ol>
+          <li>The 18 named ice habits (bullet rosettes, plates, aggregates…) are microwave-only (DDA_Habits_S_MW). They do not exist in the IR part of the file.</li>
+          <li>The IR cloud optics — in both the default and DDA files — use a 4-slab &quot;density&quot; axis [0,100,1000,10000], and per the file&#x27;s own Comment: &quot;IR and visible solid phase with the density = 0.9 g/cm³ is adopted from non-spherical particle of P. Yang (Liou and Yang, 1995)&quot; — the rest (liquid, low-density solid) are Mie (Simmer 1994).</li>
+        </ol>
+        <p>So the IR ice may already be P. Yang non-spherical, not Mie spheres — contradicting the earlier agent. This hinges on which density slab ICE_CLOUD maps to. That&#x27;s decisive for whether an IR habit lever exists at all. Let me check the CRTM type→density mapping, and read the finished Sun-Rikus run.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Decisive: CRTM_CloudScatter.f90:970 — CASE(ICE_CLOUD); k=4 ! Solid. ICE_CLOUD maps to the densest IR solid slab, which the Moradi file documents as P. Yang non-spherical ice (Liou &amp; Yang 1995), not Mie spheres. The 18 named habits are microwave-only. So for ABI IR there is no selectable ice-habit lever — the IR ice habit is a single fixed non-spherical model. The earlier agent&#x27;s &quot;Mie spheres&quot; claim was wrong. Let me verify against the default file and confirm the slabs are genuinely different optical models, and run the split-window diagnostic on the finished Sun-Rikus run.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>Check this file in CRTMv3 for the ice cloud parametrizations: /home/louis/code/crtm-experiments/crtm-driver/CRTMv3/src/Atmosphere/Cloud/CRT M_Cloud_Define.f90</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Rich result. Before reading the file the user pointed me to, let me lock in the Sun-Rikus finding because it&#x27;s clarifying:</p>
+        <p>Sun-Rikus vs Wyser (split-window by regime):</p>
+        <ul>
+          <li>Cold cirrus (C14&lt;240): Sun-Rikus nails it — sim R −1.18 vs ref −1.16 (Wyser was −1.50, too deep). Its latitude floor lifts cold-top reff 21→34 µm, removing the over-deepening.</li>
+          <li>Thin warm cirrus (C14&gt;250): Sun-Rikus is worse — sim R −0.93 vs ref −1.51 (dR +0.58; Wyser +0.40). Larger reff → flatter. These are the lowest-IWP, cold-topped, semi-transparent pixels that need smaller particles to deepen R.</li>
+        </ul>
+        <p>So the two tails pull reff in opposite directions, and a key suspect for the warm/thin flatness is the in-cloud ÷cfrac boosting reff in low-cfrac thin cirrus. Net R MAE 0.98 (Wyser 0.89). Now let me read the file the user flagged.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>This is the key file, and it resolves the habit question definitively. Let me confirm there&#x27;s nothing else about default reff/valid ranges per type.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>This file is the definitive answer on habit. Confirmed: the driver loads the default MIE_TAMU CloudCoeff (MIE_TAMU_CLOUDCOEFF=1), where the name itself says it: Mie for liquid, TAMU (= P. Yang, Texas A&amp;M) non-spherical crystals for solid ice. ICE_CLOUD→solid index, density 0.9 g/cm³ slab = P. Yang non-spherical (Liou &amp; Yang 1995). So CRTM ice is already non-spherical in the IR — the earlier subagent&#x27;s &quot;Mie spheres for ICE_CLOUD&quot; was wrong. The 18 named habits (bullet rosettes, plates, aggregates) are an alternate DDA_ARTS set whose habit-resolved optics are microwave-only; in the IR they collapse to the same density-slab table, and DDA mode even defaults ice to IceSphere (a regression). Effective_Radius (microns) is the only per-type ice input — no built-in default.</p>
+        <p>Conclusion: there is no actionable ice-habit lever for the ABI split-window in this CRTM build. The split-window must be addressed through (a) the reff parametrization + clipping and (b) cloud-type classification (ice k=4 P.Yang vs snow k=2 Mie) — which snow-as-ice already sets.</p>
+        <p>That redirects the effort to reff. The Sun-Rikus result points at the culprit for the thin-warm flatness: larger reff there → flatter. A prime suspect is the in-cloud ÷cfrac boosting reff in low-cfrac thin cirrus. Let me A/B that (cheap, decisive) and write up while it runs.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me check what the loop auto-appended to LOG so I don&#x27;t duplicate, then write the synthesis.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>While the A/B runs, let me write up the synthesis in LOG.md for the parts that are settled (diagnosis, the habit negative result, Sun-Rikus). I&#x27;ll append a dedicated investigation section.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now let me write the investigation synthesis. I&#x27;ll append it after the Sun-Rikus entry, covering the diagnosis, the habit negative result, and Sun-Rikus — with the in-cloud A/B to be filled in when it completes.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The in-cloud A/B finished. Let me run the split-window diagnostic on it to test whether in-cloud ÷cfrac is what flattens the thin cirrus.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The A/B is decisive. Comparing the thinnest-cirrus bin (260–273 K) and cold bin (210–220 K):</p>
+        <pre>┌─────────────────┬─────────────────────────────┬─────────────────────────┐
+│                 │  thin warm 260–273: R_sim   │  cold 210–220: R_sim    │
+│                 │         (ref −2.02)         │       (ref −1.13)       │
+├─────────────────┼─────────────────────────────┼─────────────────────────┤
+│ Wyser +in-cloud │ −1.50 (dR +0.52), r_e 30    │ −2.00 (dR −0.88), r_e   │
+│                 │                             │ 18                      │
+├─────────────────┼─────────────────────────────┼─────────────────────────┤
+│ Wyser           │ −1.75 (dR +0.27), r_e 25    │ −2.25 (dR −1.12), r_e   │
+│ no-in-cloud     │                             │ 14                      │
+└─────────────────┴─────────────────────────────┴─────────────────────────┘</pre>
+        <p>Confirmed: in-cloud ÷cfrac is a major driver of the thin-cirrus flattening — it inflates low-cfrac thin-cirrus reff (25→30 µm), and removing it restores ~half the missing arch in the thinnest bin — but it over-deepens cold cirrus further. The two tails genuinely want opposite reff. Let me complete the 2×2 with Sun-Rikus-no-in-cloud to test my prediction that its floor keeps thin cirrus flat regardless.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Prediction confirmed: Sun-Rikus-no-in-cloud keeps cold-top reff ~36 µm via its floor (cold dR only −0.46, much better than Wyser-no-in-cloud&#x27;s −1.12), but that same floor cements the thin-cirrus flatness (260–273 dR +0.62, r_e 36). The 2×2 is complete and conclusive. Let me append it and the definitive conclusion to LOG.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The literature synthesis landed and strongly corroborates the empirical findings — with one important refinement that changes the recommendation:</p>
+        <ul>
+          <li>Mechanism confirmed: smaller r_e → larger |split-window|, nonlinear, because ice&#x27;s imaginary refractive index is ~1.6× larger at 12 µm (k≈0.41) than 11 µm (k≈0.25). Over-large r_e flattens the BTD toward 0 — &quot;the direct cause of a too-flat simulation.&quot;</li>
+          <li>Habit is a ≲0.5 K secondary lever (confirms my negative result), and it explicitly says to ensure CRTM uses a non-spherical ice database not Mie — which I verified it does (P. Yang/TAMU).</li>
+          <li>Critical correction: the literature says avoid the IFS Sun-Rikus latitude floor — it over-estimates cold-cirrus r_e (realistic cold tops are 10–20 µm, the floor forces ~31–39 µm). So my &quot;Sun-Rikus fixes the cold tail&quot; is numerically true but the wrong physics: it flattens by using unrealistically large crystals. The right lever is smaller cold-top r_e (Wyser-gridbox at 14–25 µm is already closer; raw Sun-Rikus without the clip reaches ~10–13 µm).</li>
+        </ul>
+        <p>This makes a concrete, literature-backed test worth running: raw Sun-Rikus without the latitude floor. Let me add that variant (no floor → no latitude needed) and run it.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Beautiful, conclusive result. Raw Sun-Rikus gives cold-top r_e ~9 µm (matching the literature&#x27;s &quot;~10 µm at coldest tops&quot;), and it overshoots — R now too deep everywhere (MAE 1.15, worse). This brackets the lever cleanly and exposes the real structure. Let me record the bracket and the literature, and refine the conclusion.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now let me run the package tests (I touched core files: metdata.py, crtm_inputs.py, effr.py, ecmwf.py, hrrr.py) and persist the literature synthesis into the project.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>All 48 tests pass. Let me fix the LOG reference to the now-committed literature file, tidy the unused line in the diagnostic, and update REFERENCES.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now let me read REFERENCES.md and HANDOFF tail to update them.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>REFERENCES already has a Sun-Rikus stub — let me promote it to &quot;implemented&quot;, update the plugin map note, and add the split-window physics citations.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now update HANDOFF.md — the status header, the new schemes, the habit fact, and the open-threads section.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now revise the open-threads section (item 1 is now investigated):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now update the project memory with the split-window findings.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me verify the package still imports the new schemes end-to-end, then review git status before committing.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The new run dirs show as untracked but the older ones don&#x27;t — let me check the .gitignore to make sure I don&#x27;t commit heavy artifacts.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The .gitignore keeps the lightweight per-run record (PNGs/metrics/config) and excludes the heavy .nc/.npy — matching the existing convention. Let me stage only this investigation&#x27;s files (not the pre-existing untracked top-level noise) and verify nothing heavy sneaks in.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Clean — only lightweight records and source. Let me commit.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Committed as 6905d7d. Let me close out the tasks.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Investigation complete and committed (6905d7d). Here&#x27;s what I found.</p>
+        <p>The split-window flattening: cause</p>
+        <p>I built loop/diag_splitwindow.py, which bins the cloud-masked split-window R=C15−C14 by reference C14 (a cloud-top-temperature proxy). The &quot;flattening&quot; turned out to be regime-split, not uniform:</p>
+        <pre>┌─────────────────────────┬───────────┬─────────────────┬────────────────┐
+│   ref C14 (cloud-top)   │ reference │     sim R       │  what&#x27;s wrong  │
+│                         │     R     │ (best-physics)  │                │
+├─────────────────────────┼───────────┼─────────────────┼────────────────┤
+│ cold opaque, 210–220 K  │      −1.1 │            −2.0 │ sim too deep   │
+│ (high IWP)              │           │                 │                │
+├─────────────────────────┼───────────┼─────────────────┼────────────────┤
+│ thin semi-transparent,  │           │                 │ sim too flat ← │
+│ 260–273 K (low IWP)     │      −2.0 │            −1.5 │  the           │
+│                         │           │                 │ flattening     │
+└─────────────────────────┴───────────┴─────────────────┴────────────────┘</pre>
+        <p>The per-pixel lever is confirmed monotone (larger cloud-top r_e → flatter R), and the literature gives the mechanism: ice&#x27;s imaginary refractive index is ~1.6× larger at 12 µm than 11 µm, so smaller crystals → deeper split-window; over-large r_e flattens it toward 0.</p>
+        <p>Three things that close the question</p>
+        <ol>
+          <li>Ice habit is a dead end for ABI IR. I traced CRTM: the driver loads the default CloudCoeff.bin = MIE_TAMU, where ice already uses P. Yang/TAMU non-spherical crystals (CRTM_CloudScatter.f90:970 ICE_CLOUD→k=4 dense slab), not Mie spheres — the earlier subagent was wrong. The 18 named habits (bullet rosettes, plates, aggregates) live only in the alternate DDA_ARTS files and are microwave-only. So shape is not a lever here, and the literature agrees habit is ≲0.5 K anyway.</li>
+          <li>The thin-cirrus arch wants small cold-top r_e (~15–20 µm), and the in-cloud ÷cfrac correction flattens it by inflating low-cfrac thin-cirrus r_e (25→30 µm). I bracketed it with the new SUNRIKUS/SUNRIKUS_NOFLOOR schemes plus toggles: raw Sun-Rikus (~9 µm) overshoots (R MAE 1.15), the IFS latitude floor (~36 µm) over-flattens (0.98), Wyser-gridbox (14–25 µm) is the closest defensible config (0.90). It&#x27;s a genuine correctness-vs-color tension, not a free knob.</li>
+          <li>The cold-opaque tail is a τ/opacity artifact reff can&#x27;t touch — its tops run ~10 K too warm (the cloud isn&#x27;t optically thick enough), so small reff over-deepens it and the IFS floor only masks it. That&#x27;s cloud mass/height, outside the reff mandate.</li>
+        </ol>
+        <p>Bottom line: R MAE ≈ 0.9 K is the practical floor for a single bulk effective radius on this scene — the residual splits into a size signal already near-optimal and a τ artifact reff cannot fix. A real gain would need a bimodal/small-mode effective size CRTM&#x27;s single Effective_Radius input can&#x27;t ingest.</p>
+        <p>What I added</p>
+        <ul>
+          <li>SUNRIKUS (faithful IFS Sun &amp; Rikus 1999/Sun 2001, eq. 2.61/2.62) and SUNRIKUS_NOFLOOR (literature variant), with per-profile latitude threaded through the ice-reff seam. 48/48 package tests pass.</li>
+          <li>loop/diag_splitwindow.py, split-window-literature.md, and full write-ups in LOG/HANDOFF/REFERENCES/memory.</li>
+        </ul>
+        <p>The one open sub-thread I&#x27;d flag (logged in HANDOFF §8): the cold-opaque cloud tops being ~10 K too warm is an opacity/height problem — worth quantifying whether it&#x27;s ERA5 IWP or the maxran in-cloud τ — but it&#x27;s outside this loop&#x27;s particle-parametrization mandate, so I left it as a flag rather than chasing it with reff.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>It is entirely possible that the remaining error here comes from ERA5&#x27;s own prediction of cloud fraction and IWC, these variables themselves carry uncertainties but are outside the scope of adjusting here. Do not implement anything now, but log this discussion as another potential thread to follow: CRTM allows for multiple clouds in the same profile / altitude. It would be possible to have bimodal distributions by settings two overlapping clouds with very different radius. I do not know how I would split IWC/fraction however.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Understood — I&#x27;ll log it as a thread, not implement. Let me quickly ground one factual claim I want to put in the log (that the driver already builds multiple clouds per profile) before writing it.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Confirmed: the driver already builds one Cloud(idx) per species (ICE=Cloud(1), WATER=Cloud(2), RAIN=Cloud(3), SNOW=Cloud(4)) via CRTM_Atmosphere_Create(..., n_clouds, ...), and the height-experiment mode even stacks contrail clouds on top. So multiple clouds sharing the same layers is already first-class — a second ICE_CLOUD entry for a fine mode is structurally a non-issue; the hard part is exactly the IWC/fraction split the user named. Let me log this thread. First let me see the current §8 numbering.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now let me update item 1&#x27;s closing line to cross-reference, and add the new thread #6:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me add a short dated entry to the chronological LOG too, pointing at the thread.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now let me note the thread in project memory and commit the doc updates.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Logged and committed (01f298d) — nothing implemented. Captured in HANDOFF §8 (thread #6), the chronological LOG, and project memory:</p>
+        <p>The two points from your discussion:</p>
+        <ol>
+          <li>ERA5 cfrac/IWC uncertainty is the likely residual floor — and out of scope. Noted explicitly that the remaining split-window error may simply be the input NWP&#x27;s own cloud-fraction and IWC errors, which this loop deliberately does not touch (we only adjust particle parametrizations).</li>
+          <li>Bimodal ice via two overlapping clouds. I verified and recorded that this is structurally free in the existing code: CRTM_Atmosphere_Create(..., n_clouds, ...) carries an array of clouds, and the driver already builds one per species (met_profile.f90: ICE=Cloud(1) … SNOW=Cloud(4), with the height-experiment mode even stacking contrail clouds). So a second overlapping ICE_CLOUD entry — coarse mode (bulk mass, large r_e) + fine mode (small r_e, the split-window carrier) — directly relaxes the single-Effective_Radius floor that caps R MAE at ≈0.9 K. This also corrects my earlier framing that CRTM &quot;cannot ingest&quot; a bimodal size.</li>
+        </ol>
+        <p>The hard part, logged as the open question: how to split layer IWC and cloud fraction between the two modes. ERA5 gives neither a small-mode fraction nor a PSD width, so per the loop&#x27;s no-free-knobs rule the partition must be physically grounded — candidate sources I flagged are a published bimodal cirrus PSD (Mitchell / Heymsfield bimodal gamma) for the small-mode mass fraction, or a T-dependent small-crystal fraction. Two sub-questions left open with it: how Compute_CloudCover combines two ice clouds sharing a layer, and whether the weather-input NetCDF (which already has a per-cloud n_clouds/cloud_start_idx structure) can carry a second ice mode without a format change.</p>
+        <p>It&#x27;s queued as thread #6 for whenever you want to pick it up — a fixed/tuned split is explicitly ruled out, so it needs the PSD literature first.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>Can you list the open threads we have and ensure they are recorded in the log and handoff doc</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me read the current open-threads section and check what&#x27;s recorded so I can list them accurately and fix any gaps.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>HANDOFF §8 has the 6 threads. Two gaps I should close: the chronological LOG has no consolidated open-threads snapshot, and one genuine open observation — the G=C14−C11 band&#x27;s systematic high bias (MAE ~2.1, larger than R&#x27;s 0.9) — surfaced in the diagnosis but was never recorded as a thread. Let me read the end of §8, add the G-band thread, then add a dated snapshot to the LOG.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now add a dated consolidated open-threads snapshot to the chronological LOG, mirroring HANDOFF §8:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Both docs now carry the threads consistently (HANDOFF §8 is authoritative with 7 numbered items; the LOG has a dated snapshot mirroring it). Let me commit.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Done — committed as 4a2c506. Both records are now in sync: HANDOFF §8 is the authoritative list (7 numbered items), and LOG.md has a dated snapshot mirroring it. I also added one thread that was observed but never recorded (the G-band bias).</p>
+        <p>Open threads</p>
+        <p>Investigated / closed this session (recorded in LOG, not open): split-window flattening → single-mode-reff limit; ice habit → dead end (CRTM ice already non-spherical P. Yang, habits MW-only); warm bias → overlap fix.</p>
+        <p>Genuinely open:</p>
+        <ol>
+          <li>Cold-opaque cloud tops ~10 K too warm — an opacity/height issue (ERA5 IWP vs maxran in-cloud τ), outside the reff mandate. Sub-thread of the split-window work.</li>
+          <li>G=C14−C11 (8.5 µm) high bias — cloud bias +0.5…+0.8 K, MAE ~2.1 K — the largest band-diff residual, bigger than R&#x27;s 0.9. 8.5 µm mixes ice optics with surface emissivity / low-level WV; split land/sea × cloud/clear before assuming it&#x27;s a particle knob. (newly recorded)</li>
+          <li>ERA5 cfrac/IWC uncertainty — the likely residual-error floor; recorded as a caveat, deliberately out of scope (we tune only particle params, not NWP fields).</li>
+          <li>Overlap default deliberation — maxran vs exponential-random (IFS, needs a decorrelation length).</li>
+          <li>Full-res k=1 milestone of the best-physics + maxran config (~5.76M profiles).</li>
+          <li>Cloud-mask refinement — a band-difference cirrus mask vs the current C14 &lt; 273 K.</li>
+          <li>Promote Wyser + Martin + in-cloud + Sun-Rikus from optimization-color/ into the package (ADR 0001).</li>
+          <li>Bimodal ice via two overlapping ICE_CLOUD clouds (coarse + fine r_e) — beats the single-reff R-MAE floor; open problem is the IWC/fraction split, which needs a published bimodal cirrus PSD, not a fitted split.</li>
+        </ol>
+        <p>Items 1–3 are diagnostic/caveat-flavored; 4–6 are quick experiments; 7 is consolidation; 8 is the substantive new physics direction from your last message.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>thanks!</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>You&#x27;re welcome!</p>
+        <p>To recap where things landed this session: the split-window investigation is complete and committed (6905d7d), the bimodal-ice thread and ERA5 caveat are logged (01f298d), and the consolidated open-threads list is in sync across LOG and HANDOFF (4a2c506). Package tests pass 48/48, and the effr-exploration branch has three clean commits ready whenever you want to push or open a PR.</p>
+        <p>Good luck with the next thread — #8 (bimodal ice) is the one with real upside if you can find a defensible PSD-based mass/fraction split.</p>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
