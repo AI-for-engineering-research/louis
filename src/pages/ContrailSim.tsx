@@ -18,7 +18,7 @@ export default function ContrailSim() {
   const [view, setView] = useState<View>('3d')
 
   return (
-    <div className="contrail-sim">
+    <div className="sim-page">
       <header className="sim-header">
         <h1>Contrail simulation</h1>
         <p className="sim-intro">
