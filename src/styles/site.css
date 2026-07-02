@@ -1,0 +1,377 @@
+/*
+ * Site-specific layer on top of the vendored Clarity stylesheet (clarity.css).
+ * Adds: the sky-blue accent, the persistent top nav, footer, homepage link
+ * cards, the research-log index + entry chrome. Imported AFTER clarity.css so
+ * these rules win on ties.
+ */
+
+:root {
+  --accent: #2e86de;
+  --accent-dark: #1b6fc4;
+  --ink: #353535;
+  --muted: #7a7a7a;
+  --hairline: #e6e6e6;
+
+  /* Side "margin" of the content column, per side. Clarity builds the margins
+     from this horizontal padding (in vw), NOT a max-width — so SMALLER =
+     WIDER content. Was 8.5vw (hero) / 6vw (prose) in the vendored theme.
+     Try 5vw / 4vw to go wider still. Applied in the "Content width" block. */
+  --page-gutter: 18vw;
+}
+
+/* Sticky-footer scaffold: nav / main / footer stack full height. */
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main.site-main {
+  flex: 1;
+  width: 100%;
+}
+
+/* ===================== Content width ===================== */
+/* One place to control the page's side margins for EVERY section. Turn the
+   --page-gutter knob in :root above. The right-side calc() is Clarity's
+   scrollbar-width compensation, kept so content stays centered.
+   Prefer a capped column instead of fluid margins? Replace the two rules below
+   with:  .container, div.container.blog.main { max-width: 1100px;
+          margin-inline: auto; padding-left: 4vw; padding-right: 4vw; } */
+.container {
+  padding-left: var(--page-gutter);
+  padding-right: calc(var(--page-gutter) - (100vw - 100%));
+}
+
+div.container.blog.main {
+  padding-left: var(--page-gutter);
+  padding-right: var(--page-gutter);
+}
+
+/* ============================ Top nav ============================ */
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  padding: 0.85rem 6vw;
+  background: rgba(255, 255, 255, 0.88);
+  -webkit-backdrop-filter: saturate(160%) blur(10px);
+  backdrop-filter: saturate(160%) blur(10px);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.site-nav__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.35rem 1.75rem;
+  list-style: none;
+}
+
+/* Matches Clarity's floating TOC nav-items: Poppins, muted gray, going solid
+   black + bold on the active page (no uppercase, no accent underline). */
+.site-nav__link {
+  font-family: "Poppins", sans-serif;
+  font-size: 1.3rem; /* nav link size — was 0.875rem; bump/shrink here */
+  font-weight: 400;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 0.2rem 0;
+  transition: color 0.18s ease;
+}
+
+.site-nav__link:hover {
+  color: var(--ink);
+}
+
+.site-nav__link.is-active {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ============================ Footer ============================ */
+.site-footer {
+  padding: 3vh 6vw;
+  background-color: #fafafa;
+  border-top: 1px solid var(--hairline);
+}
+
+.site-footer p {
+  font-family: "Charter", serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0.15rem 0;
+}
+
+.site-footer a {
+  /* Inherit the parent <p>'s size; clarity.css sets an explicit font-size on
+     bare `a` in its responsive rules, which would otherwise make the link
+     larger than the surrounding footer text. */
+  font-size: inherit;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  color: var(--accent-dark);
+  text-decoration: underline;
+}
+
+/* ===================== Hero cover (Home) ===================== */
+/* Uses Clarity's native .blog-cover (sharp foreground + blurred background);
+   these rules just add rounded corners + a soft shadow. */
+.blog-cover img.foreground {
+  border-radius: 10px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+}
+
+.blog-cover img.background {
+  border-radius: 10px;
+  opacity: 0.85;
+}
+
+.hero-tagline {
+  font-family: "Poppins", sans-serif;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ink);
+  padding-top: 0.5vh;
+}
+
+/* ===================== Home link cards ===================== */
+.home-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  padding: 1vh 0 2vh;
+}
+
+.link-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.3rem 1.4rem;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: #fff;
+  text-decoration: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.link-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: 0 12px 28px rgba(46, 134, 222, 0.15);
+}
+
+.link-card__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 1.02rem;
+  color: var(--ink);
+}
+
+.link-card__title .icon-arrow {
+  color: var(--accent);
+  transition: transform 0.18s ease;
+}
+
+.link-card:hover .link-card__title .icon-arrow {
+  transform: translateX(4px);
+}
+
+.link-card__desc {
+  font-family: "Charter", serif;
+  font-size: 0.95rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+/* ===================== Research-log index ===================== */
+.log-list {
+  list-style: none;
+  padding: 1vh 0 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.log-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  padding: 1rem 0.25rem;
+  border-bottom: 1px solid var(--hairline);
+  text-decoration: none;
+  transition: background 0.15s ease, padding-left 0.15s ease;
+}
+
+.log-row:hover {
+  background: #f6faff;
+  padding-left: 0.75rem;
+}
+
+.log-row__date {
+  flex: 0 0 auto;
+  min-width: 7.5rem;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.log-row__title {
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.log-row:hover .log-row__title {
+  color: var(--accent);
+}
+
+/* ===================== Research-log entry ===================== */
+.entry-meta {
+  font-family: "Poppins", sans-serif;
+  font-size: 0.85rem;
+  color: var(--muted);
+  padding: 0.25vh 0 1.5vh;
+}
+
+.entry-meta .dot {
+  padding: 0 0.5em;
+  opacity: 0.6;
+}
+
+.entry-back {
+  display: inline-block;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.82rem;
+  color: var(--accent);
+  text-decoration: none;
+  padding-bottom: 1vh;
+}
+
+.entry-back:hover {
+  color: var(--accent-dark);
+}
+
+.entry-artifacts {
+  margin-top: 1vh;
+  padding: 1rem 1.25rem;
+  background: #f6faff;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+}
+
+.entry-artifacts h2 {
+  padding-top: 0 !important;
+}
+
+.entry-artifacts ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+}
+
+.entry-artifacts li {
+  padding: 0.25rem 0;
+}
+
+.entry-artifacts a {
+  color: var(--accent);
+  text-decoration: none;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.95rem;
+}
+
+.entry-artifacts a:hover {
+  color: var(--accent-dark);
+  text-decoration: underline;
+}
+
+/* Content-area accent for inline links (Clarity keeps body links ink-colored;
+   we highlight only links inside prose sections and buttons). */
+.blog .prose a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.blog .prose a:hover {
+  color: var(--accent-dark);
+  text-decoration: underline;
+}
+
+/* Readable lists inside entry/prose bodies (Clarity zeroes list padding). */
+.blog .prose ul,
+.blog .prose ol {
+  padding-left: 1.4rem;
+  margin: 0.5vh 0 1.5vh;
+}
+
+.blog .prose li {
+  padding: 0.2rem 0;
+  font-family: "Charter", serif;
+}
+
+.blog .prose h2 {
+  padding-top: 2.2vh;
+}
+
+/* Accent the Clarity "project" button used for primary CTAs. */
+.button.accent {
+  background-color: var(--accent);
+  color: #fff;
+}
+
+.button.accent:hover {
+  background-color: var(--accent-dark);
+  opacity: 1;
+  color: #fff;
+}
+
+.button.accent .icon-arrow {
+  margin-left: 0.4em;
+}
+
+/* Inline icon sizing. Clarity sets a global `svg { width: 100% }`, which would
+   stretch these icons; restore their intrinsic (attribute) size. */
+.icon-arrow,
+.icon-external {
+  width: auto;
+  height: auto;
+  flex: none;
+  vertical-align: middle;
+}
+
+.icon-arrow {
+  display: inline-flex;
+}
+
+/* ===================== Responsive ===================== */
+@media screen and (max-width: 860px) {
+  .home-cards {
+    grid-template-columns: 1fr;
+  }
+  .site-nav {
+    padding: 0.75rem 6vw;
+  }
+  .site-nav__links {
+    gap: 0.3rem 1.25rem;
+  }
+  .log-row {
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .log-row__date {
+    min-width: 0;
+  }
+}

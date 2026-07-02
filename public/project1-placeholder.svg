@@ -1,9 +1,0 @@
-<svg width="400" height="250" xmlns="http://www.w3.org/2000/svg">
-  <rect width="400" height="250" fill="#e8e8e8"/>
-  <text x="200" y="125" font-size="18" text-anchor="middle" dominant-baseline="middle" fill="#999">
-    Project 1: Satellite Imagery
-  </text>
-  <text x="200" y="150" font-size="14" text-anchor="middle" dominant-baseline="middle" fill="#bbb">
-    Replace with animated GIF
-  </text>
-</svg>

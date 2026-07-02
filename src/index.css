@@ -1,25 +1,9 @@
+/* Minimal global base. Typography/layout come from styles/clarity.css and
+   styles/site.css. */
 * {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
-    'Fira Rounded', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #333;
-  margin: 0;
-  padding: 0;
-  font-weight: 500;
-}
-
-a {
-  color: #0066cc;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
+html {
+  scroll-behavior: smooth;
 }
