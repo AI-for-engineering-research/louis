@@ -38,17 +38,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* About me — placeholder for Louis to fill in */}
-      <div className="container blog main">
-        <h1>About me</h1>
-        <p className="text">
-          <em>
-            PhD candidate working on the climate impacts of contrails. My research focus is on better
-            constraining modeling with large scale satellite imagery.
-          </em>
-        </p>
-      </div>
-
       {/* Link cards */}
       <div className="container blog main">
         <h1>Explore</h1>
@@ -69,6 +58,16 @@ export default function Home() {
             desc="A running, per-session log of how I use AI tools across my research."
           />
         </div>
+      </div>
+
+      <div className="container blog main">
+        <h1>About me</h1>
+        <p className="text">
+          <em>
+            PhD candidate working on the climate impacts of contrails. My research focus is on better
+            constraining modeling with large scale satellite imagery.
+          </em>
+        </p>
       </div>
     </>
   )
