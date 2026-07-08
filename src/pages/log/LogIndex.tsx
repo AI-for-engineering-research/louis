@@ -7,8 +7,7 @@ export default function LogIndex() {
     <div className="container blog main first">
       <h1>Research log</h1>
       <p className="text">
-        A running, per-session log of how I use AI tools across my research —
-        what I asked for, what worked, and what didn't. Newest first.
+        A running, log of how I use AI tools across my research and small research updates.
       </p>
 
       <ul className="log-list">
