@@ -1,0 +1,245 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1220 940" width="1220" height="940" role="img" aria-labelledby="t d">
+<title id="t">Cloud-matching loop — how the context files and the run pipeline fit together</title>
+<desc id="d">STATUS.md is the entry point; HANDOFF.md holds stable orientation and the canonical run commands; run_iteration.py produces a run directory and auto-appends LOG.md; the agent reads the images and metrics, then prunes STATUS.md and edits HANDOFF.md in place.</desc>
+
+<style>
+  :root{
+    --bg:#ffffff; --ink:#1f2328; --muted:#57606a; --line:#8c959f; --rule:#d8dee4;
+    --doc-f:#e9f1fb;  --doc-s:#3b6ea5;
+    --key-f:#fff2e8;  --key-s:#c2410c;
+    --log-f:#e6f4ec;  --log-s:#2b7a4b;
+    --code-f:#f2eafb; --code-s:#6f42c1;
+    --data-f:#f1f2f4; --data-s:#6e7781;
+    --think-f:#fdeaf0;--think-s:#b02a4a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0d1117; --ink:#e6edf3; --muted:#9198a1; --line:#6e7681; --rule:#30363d;
+      --doc-f:#10233a;  --doc-s:#5b9bd5;
+      --key-f:#3a1d0c;  --key-s:#f0883e;
+      --log-f:#0d2a1a;  --log-s:#3fb950;
+      --code-f:#231437; --code-s:#a371f7;
+      --data-f:#161b22; --data-s:#8b949e;
+      --think-f:#3a1020;--think-s:#f0637c;
+    }
+  }
+  .bg{fill:var(--bg)}
+  text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; fill:var(--ink)}
+  .h1{font-size:21px;font-weight:700}
+  .h2{font-size:12px;font-weight:700;fill:var(--muted);letter-spacing:.8px}
+  .sub{font-size:12.5px;fill:var(--muted)}
+  .bt{font-size:13.5px;font-weight:700}
+  .bd{font-size:10.4px;fill:var(--ink)}
+  .bm{font-size:10.4px;fill:var(--muted)}
+  .it{font-size:9.6px;fill:var(--muted);font-style:italic}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .el{font-size:9.6px;fill:var(--muted)}
+  .pill{font-size:9px;font-weight:700;letter-spacing:.5px;text-anchor:middle}
+
+  .edge{fill:none;stroke:var(--line);stroke-width:1.5;marker-end:url(#ah)}
+  .xref{fill:none;stroke:var(--muted);stroke-width:1.3;stroke-dasharray:5 4;marker-end:url(#ahm)}
+  .loop{fill:none;stroke:var(--think-s);stroke-width:2.6;marker-end:url(#aht)}
+  .ah{fill:var(--line)} .ahm{fill:var(--muted)} .aht{fill:var(--think-s)}
+  .rule{stroke:var(--rule);stroke-width:1}
+</style>
+
+<defs>
+  <marker id="ah"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah"  d="M0,0 L10,5 L0,10 z"/></marker>
+  <marker id="ahm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ahm" d="M0,0 L10,5 L0,10 z"/></marker>
+  <marker id="aht" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="aht" d="M0,0 L10,5 L0,10 z"/></marker>
+</defs>
+
+<rect class="bg" x="0" y="0" width="1220" height="940"/>
+
+<text class="h1" x="32" y="40">Cloud-matching loop — context files &amp; the iteration workflow</text>
+<text class="sub" x="32" y="62"><tspan class="mono">crtm-inputs/optimization-color/</tspan> · each doc has a maintenance contract; the write mode is the point</text>
+
+<!-- ============ 1. ORIENT ============ -->
+<text class="h2" x="32" y="104">① ORIENT — the reading order</text>
+
+<!-- STATUS.md -->
+<rect x="32" y="118" width="250" height="150" rx="8" fill="var(--key-f)" stroke="var(--key-s)" stroke-width="1.8"/>
+<text class="bt" x="48" y="146">STATUS.md</text>
+<rect x="196" y="126" width="78" height="17" rx="8.5" fill="var(--key-s)"/>
+<text class="pill" x="235" y="138.5" style="fill:var(--bg)">READ FIRST</text>
+<text class="bd" x="48" y="172">Where we are — current best config</text>
+<text class="bd" x="48" y="189">+ metrics, settled findings, open threads.</text>
+<line class="rule" x1="48" y1="201" x2="266" y2="201"/>
+<text class="bm" x="48" y="219">Prune, don't append. ≤ ~100 lines.</text>
+<text class="bm" x="48" y="236">Evidence → grep the LOG.md Index</text>
+<text class="bm" x="48" y="253">before re-running anything.</text>
+
+<!-- HANDOFF.md -->
+<rect x="326" y="118" width="250" height="150" rx="8" fill="var(--doc-f)" stroke="var(--doc-s)" stroke-width="1.2"/>
+<text class="bt" x="342" y="146">HANDOFF.md</text>
+<rect x="483" y="126" width="85" height="17" rx="8.5" fill="none" stroke="var(--doc-s)"/>
+<text class="pill" x="525.5" y="138.5" style="fill:var(--doc-s)">EDIT IN PLACE</text>
+<text class="bd" x="342" y="170">Stable orientation beneath STATUS:</text>
+<text class="bd" x="342" y="187">§1 goal · §2 seven framing decisions</text>
+<text class="bd" x="342" y="204">§4 how to run — canonical commands</text>
+<text class="bd" x="342" y="221">§5 tools built · §6 verified facts</text>
+<text class="bd" x="342" y="238">§8 thread archive · §9 gotchas</text>
+<text class="it" x="342" y="257">Running commentary goes to LOG.md.</text>
+
+<!-- REFERENCES.md -->
+<rect x="620" y="118" width="264" height="74" rx="8" fill="var(--doc-f)" stroke="var(--doc-s)" stroke-width="1.2"/>
+<text class="bt" x="636" y="142">REFERENCES.md</text>
+<rect x="824" y="126" width="52" height="17" rx="8.5" fill="none" stroke="var(--doc-s)"/>
+<text class="pill" x="850" y="138.5" style="fill:var(--doc-s)">APPEND</text>
+<text class="bd" x="636" y="164">Literature &amp; parametrization science —</text>
+<text class="bd" x="636" y="181">Wyser · Martin · Sun-Rikus · IFS CY49R1.</text>
+
+<!-- CONTEXT.md -->
+<rect x="620" y="200" width="264" height="68" rx="8" fill="var(--doc-f)" stroke="var(--doc-s)" stroke-width="1.2"/>
+<text class="bt" x="636" y="222">CONTEXT.md</text>
+<rect x="824" y="207" width="52" height="17" rx="8.5" fill="none" stroke="var(--doc-s)"/>
+<text class="pill" x="850" y="219.5" style="fill:var(--doc-s)">STABLE</text>
+<text class="bd" x="636" y="242">Glossary: ash composite · reference vs</text>
+<text class="bd" x="636" y="259">simulated image · on-disk pixel.</text>
+
+<!-- Supporting evidence -->
+<rect x="920" y="118" width="264" height="150" rx="8" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.2"/>
+<text class="bt" x="936" y="146">Supporting evidence</text>
+<text class="bd mono" x="936" y="172">docs/adr/0001-…-cli-plugins.md</text>
+<text class="bd mono" x="936" y="189">split-window-literature.md</text>
+<text class="bd mono" x="936" y="206">reff-tradeoff-vs-era5-report.html</text>
+<text class="bd mono" x="936" y="223">literature/ifs-cy49r1-part-iv.pdf</text>
+<text class="it" x="936" y="248">Cited from above; frozen, not maintained.</text>
+
+<path class="xref" d="M282,193 H322"/>
+<path class="xref" d="M576,193 H596 M596,193 V155 H616"/>
+<path class="xref" d="M596,193 V234 H616"/>
+<path class="xref" d="M884,155 H916"/>
+
+<!-- ============ 2. RUN ============ -->
+<text class="h2" x="32" y="300">② RUN — one labelled iteration</text>
+
+<rect x="32" y="330" width="210" height="84" rx="8" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.2"/>
+<text class="bt" x="44" y="352">Fixed inputs</text>
+<text class="bm" x="44" y="371">ERA5 pl + sl · 2025-12-10 00:00</text>
+<text class="bm" x="44" y="387">EASE-Grid land classification</text>
+<text class="bm" x="44" y="403">ABI georef · reference/ash.npy</text>
+
+<rect x="32" y="438" width="210" height="52" rx="8" fill="var(--code-f)" stroke="var(--code-s)" stroke-width="1.2"/>
+<text class="bt mono" x="44" y="459" style="font-size:10.5px">loop/make_coarse_grid.py --k</text>
+<text class="bm" x="44" y="477" style="font-size:9.8px">once per stride k (8, 12, then 1)</text>
+
+<rect x="32" y="510" width="210" height="60" rx="8" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.2"/>
+<text class="bt mono" x="44" y="532" style="font-size:12px">loop/grid/</text>
+<text class="bm mono" x="44" y="551">coarse_kN.nc · reference_kN.npz</text>
+
+<path class="edge" d="M137,414 V434"/>
+<path class="edge" d="M137,490 V506"/>
+
+<!-- container -->
+<rect x="290" y="326" width="894" height="234" rx="10" fill="none" stroke="var(--code-s)" stroke-width="1.4" stroke-dasharray="7 5"/>
+<text class="bt mono" x="306" y="349" style="font-size:12px;fill:var(--code-s)">loop/run_iteration.py --label --k --scheme --snow-as-ice --in-cloud-reff --overlap</text>
+
+<rect x="310" y="388" width="150" height="64" rx="7" fill="var(--code-f)" stroke="var(--code-s)" stroke-width="1.2"/>
+<text class="bt" x="385" y="409" text-anchor="middle" style="font-size:12px">crtm-inputs CLI</text>
+<text class="bm" x="385" y="426" text-anchor="middle">make_crtm_input</text>
+<text class="bm mono" x="385" y="441" text-anchor="middle">+ --scheme-plugin</text>
+
+<rect x="486" y="388" width="110" height="64" rx="7" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.2"/>
+<text class="bt mono" x="541" y="415" text-anchor="middle" style="font-size:11.5px">crtm_input.nc</text>
+<text class="bm" x="541" y="432" text-anchor="middle">(profile, layer)</text>
+
+<rect x="622" y="388" width="130" height="64" rx="7" fill="var(--code-f)" stroke="var(--code-s)" stroke-width="1.2"/>
+<text class="bt" x="687" y="413" text-anchor="middle" style="font-size:12px">crtm-driver</text>
+<text class="bm mono" x="687" y="430" text-anchor="middle">config.nml · maxran</text>
+
+<rect x="778" y="388" width="110" height="64" rx="7" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.2"/>
+<text class="bt mono" x="833" y="415" text-anchor="middle" style="font-size:11.5px">crtm_out.nc</text>
+<text class="bm" x="833" y="432" text-anchor="middle">BT per channel</text>
+
+<rect x="914" y="388" width="160" height="64" rx="7" fill="var(--code-f)" stroke="var(--code-s)" stroke-width="1.2"/>
+<text class="bt mono" x="994" y="409" text-anchor="middle" style="font-size:12px">loop/ashlib.py</text>
+<text class="bm" x="994" y="426" text-anchor="middle">ash RGB + BT metrics</text>
+<text class="bm" x="994" y="441" text-anchor="middle">full &amp; cloud-masked</text>
+
+<rect x="310" y="478" width="200" height="52" rx="7" fill="var(--code-f)" stroke="var(--code-s)" stroke-width="1.2"/>
+<text class="bt mono" x="322" y="498" style="font-size:10px">*_plugin.py — ADR 0001</text>
+<text class="bm" x="322" y="516" style="font-size:9.4px">wyser · martin · sunrikus · constliq</text>
+<path class="edge" d="M405,478 V456"/>
+
+<text class="el" x="532" y="492">Run in the <tspan class="mono">test</tspan> pixi env — matplotlib is not in the default env.</text>
+<text class="el" x="532" y="510">Schemes are authored here, registered via the CLI plugin seam,</text>
+<text class="el" x="532" y="528">promoted into the package once proven. Sensor <tspan class="mono">abi_g16</tspan> proxies GOES-19.</text>
+
+<path class="edge" d="M242,372 H268 V404 H306"/>
+<path class="edge" d="M242,540 H268 V436 H306"/>
+<path class="edge" d="M460,420 H482"/>
+<path class="edge" d="M596,420 H618"/>
+<path class="edge" d="M752,420 H774"/>
+<path class="edge" d="M888,420 H910"/>
+
+<!-- ============ 3. RECORD ============ -->
+<text class="h2" x="32" y="596">③ RECORD — what each run leaves behind</text>
+
+<rect x="290" y="614" width="380" height="120" rx="8" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.2"/>
+<text class="bt mono" x="306" y="638" style="font-size:12.5px">loop/runs/&lt;label&gt;/</text>
+<text class="bd" x="306" y="663"><tspan class="mono">compare.png</tspan>  ← open this first</text>
+<text class="bm mono" x="306" y="681">error_maps.png · metrics.json</text>
+<text class="bm mono" x="306" y="699">sim_ash.npy · crtm_input.nc · crtm_out.nc</text>
+<text class="it" x="306" y="720">One directory per labelled iteration, kept for comparison.</text>
+
+<rect x="700" y="614" width="300" height="120" rx="8" fill="var(--log-f)" stroke="var(--log-s)" stroke-width="1.8"/>
+<text class="bt" x="716" y="638">LOG.md</text>
+<rect x="906" y="622" width="86" height="17" rx="8.5" fill="var(--log-s)"/>
+<text class="pill" x="949" y="634.5" style="fill:var(--bg)">APPEND-ONLY</text>
+<text class="bd" x="716" y="663">One entry per run or investigation:</text>
+<text class="bd" x="716" y="681">hypothesis · verbatim command · timings</text>
+<text class="bd" x="716" y="699">· BT metrics + one row in the Index table.</text>
+<text class="it" x="716" y="720">Never edit or delete a past entry. Grep the Index.</text>
+
+<rect x="1030" y="614" width="154" height="120" rx="8" fill="var(--code-f)" stroke="var(--code-s)" stroke-width="1.2"/>
+<text class="bt mono" x="1042" y="638" style="font-size:11.5px">loop/diag_*.py</text>
+<text class="bm" x="1042" y="661">overcast · splitwindow</text>
+<text class="bm" x="1042" y="677">coldtops · green</text>
+<text class="bm" x="1042" y="693">intersection</text>
+<text class="it" x="1042" y="716">→ invest / synth entries</text>
+
+<path class="edge" d="M480,560 V610"/>
+<text class="el" x="488" y="592">writes</text>
+<path class="edge" d="M860,560 V610"/>
+<text class="el" x="868" y="592">auto-appends one entry</text>
+<path class="edge" d="M1030,674 H1004"/>
+
+<!-- ============ 4. JUDGE ============ -->
+<text class="h2" x="32" y="768">④ JUDGE — read, reason, then edit the docs</text>
+
+<rect x="290" y="784" width="470" height="104" rx="8" fill="var(--think-f)" stroke="var(--think-s)" stroke-width="1.8"/>
+<text class="bt" x="306" y="810">Agent judgment — the loop's real work</text>
+<text class="bd" x="306" y="833">Open <tspan class="mono">compare.png</tspan> first — the primary signal is visual;</text>
+<text class="bd" x="306" y="851">the metric backs it up, it is never minimized over free knobs.</text>
+<text class="bd" x="306" y="869">Every change must be physically explainable (no magic constants).</text>
+
+<path class="edge" d="M480,734 V780"/>
+<path class="edge" d="M720,734 V780"/>
+
+<path class="loop" d="M290,836 H12 V193 H28"/>
+<text class="el" x="300" y="912">Then: <tspan font-weight="700">prune</tspan> STATUS.md · <tspan font-weight="700">edit</tspan> HANDOFF.md in place · <tspan font-weight="700">append</tspan> REFERENCES.md · form the next hypothesis.</text>
+
+<!-- ============ legend ============ -->
+<rect x="800" y="784" width="384" height="104" rx="8" fill="none" stroke="var(--rule)" stroke-width="1.2"/>
+<text class="h2" x="816" y="804" style="font-size:10px">LEGEND</text>
+
+<path class="edge" d="M816,826 H848"/>
+<text class="el" x="858" y="829">produces / writes</text>
+<path class="xref" d="M816,850 H848"/>
+<text class="el" x="858" y="853">read next / cross-reference</text>
+<path class="loop" d="M816,874 H848"/>
+<text class="el" x="858" y="877">judgment closes the loop</text>
+
+<rect x="1000" y="794" width="12" height="11" rx="2" fill="var(--key-f)" stroke="var(--key-s)"/>
+<text class="el" x="1018" y="803">read first</text>
+<rect x="1000" y="812" width="12" height="11" rx="2" fill="var(--doc-f)" stroke="var(--doc-s)"/>
+<text class="el" x="1018" y="821">doc</text>
+<rect x="1000" y="830" width="12" height="11" rx="2" fill="var(--log-f)" stroke="var(--log-s)"/>
+<text class="el" x="1018" y="839">append-only log</text>
+<rect x="1000" y="848" width="12" height="11" rx="2" fill="var(--code-f)" stroke="var(--code-s)"/>
+<text class="el" x="1018" y="857">script</text>
+<rect x="1000" y="866" width="12" height="11" rx="2" fill="var(--data-f)" stroke="var(--data-s)"/>
+<text class="el" x="1018" y="875">data artifact</text>
+
+</svg>
