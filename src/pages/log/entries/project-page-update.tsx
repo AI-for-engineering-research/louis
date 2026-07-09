@@ -26,6 +26,9 @@ export function Body() {
                 Wanted to make use the Clarity template's nice image slider to showcase the differences between simulated and real ash imagery.
                 Added some discussions and showcases some of the contrail simulations. This page will be updated as the simulations progress!
             </p>
+            <p className="text">
+                Also cleaned up the git history, removing large artifacts etc... Next might be to compress the images or use  <code>git lfs</code>...
+            </p>
         </>
     )
 }
