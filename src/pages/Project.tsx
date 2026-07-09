@@ -11,6 +11,12 @@ const ASH_IMAGES: CompareImage[] = [
   { id: 'best', label: 'Synthetic — best parametrization', src: '/louis/project/full-ash-best.png' },
 ]
 
+const CONTRAIL_IMAGES: CompareImage[] = [
+  { id: 'goes', label: 'GOES observation', src: '/louis/project/scene04-goes.png' },
+  { id: 'no-contrail', label: 'Synthetic — no contrail', src: '/louis/project/scene04-sim-nc.png' },
+  { id: 'contrail', label: 'Synthetic — contrail', src: '/louis/project/scene04-sim-c.png' },
+]
+
 export default function Project() {
   return (
     <>
@@ -87,6 +93,26 @@ export default function Project() {
             We can introduce contrails by simulating them using NWP + CoCiP and rasterizing their
             properties to the the radiative transfer model grid. CRTM does know what contrails are, they
             are simply treated as a generic ice cloud with a given ice crystal effective radius and water content.
+          </p>
+        </div>
+      </div>
+
+      <div className="container blog main gray">
+        <ImageCompare images={CONTRAIL_IMAGES} defaultLeft="goes" defaultRight="contrail" />
+        <p className="caption">
+          Ash RGB composites over the GOES-16 CONUS crop for 2024-03-03 18:40Z. Synthetic images use ERA5 data on model levels.
+          Contrails are simulated with as-flown ADS-B tracks, ERA5 on model levels and CoCiP with an 8h spin-up.
+        </p>
+      </div>
+
+      <div className="container blog main">
+        <div className="prose">
+          <p className="text">
+            Zooming into a specific scene over the US, the limits of ERA5's horizontal resolution start showing. 0.25&#176;&times;0.25&#176;
+            is coarse, and interpolating it to the ABI grid leads to very smooth features. Again, certain clouds are overly green in the simulation.
+            Comparing the synthetic image without contrails to the real GOES image leads to an interesting observation: the large cirrus cluster in the
+            center of the scene is not captured by ERA5. Could this be because this is an aged contrail cluster which ERA5 cannot simulate as it does
+            not know about aviation?
           </p>
         </div>
       </div>
