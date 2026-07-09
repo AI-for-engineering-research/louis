@@ -21,8 +21,10 @@ export default function Math({ children, block = false, align = 'center' }: Prop
 
   if (!block) return <span dangerouslySetInnerHTML={{ __html: html }} />
 
+  // A span, not a div: display math is usually written inside a paragraph, and
+  // <p> may only contain phrasing content. CSS makes it a block box anyway.
   return (
-    <div
+    <span
       className={align === 'left' ? 'katex-block katex-left' : 'katex-block'}
       dangerouslySetInnerHTML={{ __html: html }}
     />
