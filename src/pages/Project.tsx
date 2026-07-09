@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight } from '../components/Icon'
 import ImageCompare, { type CompareImage } from '../components/ImageCompare'
 import Math from '../components/Math'
+import VideoPlayer from '../components/VideoPlayer'
 
 const GRID = '/louis/synthetic_images.png'
 
@@ -117,6 +118,20 @@ export default function Project() {
         </div>
       </div>
 
+      <div className="container blog main gray">
+        <VideoPlayer
+          src="/louis/project/timelapse-cluster.mp4"
+          label="Timelapse of the GOES-16 ash RGB over the CONUS crop on 2024-03-03"
+          fps={1}
+        />
+        <p className="caption">
+          Ash RGB timelapse over the same GOES-16 CONUS crop, 03:40 to 13:40 local on 2024-03-03.
+          13:40 local is exactly 18:40Z plotted above.
+          The cirrus cluster near the center of the scene is already there but faint at the start of the
+          sequence. As local air traffic pickups, many contrails form and spread in the cluster. This leads
+          to the large cluster scene on the final timestep.
+        </p>
+      </div>
     </>
   )
 }

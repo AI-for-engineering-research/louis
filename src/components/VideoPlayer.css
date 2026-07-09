@@ -1,0 +1,43 @@
+/* ======================== Video Player ===================== */
+/* The player is styled by clarity.css (video, .video-control, .video-speed). */
+.video-player video {
+  cursor: pointer;
+}
+
+.video-player .video-control {
+  /* Width held for the readout, sized for its longest value ("0.25×", "11 / 11").
+     Expressed at the readout's own font-size, see the spacer below. */
+  --readout-width: 4.75em;
+  flex-wrap: wrap;
+}
+
+/* Clarity's button margin is meant for stacked CTAs; this row sits under the video. */
+.video-player .video-control button {
+  margin-bottom: 0;
+}
+
+.video-player .video-control button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+/* Matches the button type. The width holds room for the longest value so the
+   buttons stay put when the readout fades in. */
+.video-player .video-speed {
+  align-self: center;
+  min-width: var(--readout-width);
+  font-family: "Poppins", sans-serif;
+  font-size: 0.65em;
+  font-weight: 500;
+  letter-spacing: 0.075em;
+  color: #666667;
+}
+
+/* The readout reserves width to the right of the buttons; mirror it on the left
+   so the buttons themselves stay centred under the video. Both are sized at the
+   readout's font-size so the two widths resolve to the same number of pixels. */
+.video-player .video-control::before {
+  content: "";
+  font-size: 0.65em;
+  width: var(--readout-width);
+}
