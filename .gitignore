@@ -2,6 +2,9 @@
 node_modules/
 dist/
 
+# WSL alternate data stream metadata, created when copying files from Windows
+*:Zone.Identifier
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
