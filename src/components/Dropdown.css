@@ -1,0 +1,109 @@
+/* ======================== Dropdown ===================== */
+.dropdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropdown-label {
+  color: #353535;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.dropdown-control {
+  position: relative;
+}
+
+.dropdown-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 240px;
+  height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 5px;
+  background-color: #ececec;
+  color: #353535;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: left;
+  /* clarity.css uppercases every button; these read as form fields, not buttons. */
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: pointer;
+  outline: none;
+}
+
+.dropdown-button:focus-visible {
+  box-shadow: 0 0 0 2px #353535;
+}
+
+.dropdown-chevron {
+  flex: none;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #353535;
+}
+
+.dropdown-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border-radius: 5px;
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+.dropdown.right .dropdown-list {
+  left: auto;
+  right: 0;
+}
+
+.dropdown-list li {
+  padding: 7px 10px;
+  border-radius: 4px;
+  color: #353535;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.dropdown-list li.active {
+  background: #ececec;
+}
+
+.dropdown-list li[aria-selected="true"] {
+  font-weight: 500;
+}
+
+@media screen and (max-width: 769px) {
+  .dropdown {
+    width: 100%;
+  }
+  .dropdown-control {
+    flex: 1;
+  }
+  .dropdown-button {
+    min-width: 0;
+    width: 100%;
+  }
+}
