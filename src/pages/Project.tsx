@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight } from '../components/Icon'
 import ImageCompare, { type CompareImage } from '../components/ImageCompare'
+import Math from '../components/Math'
 
 const GRID = '/louis/synthetic_images.png'
 
@@ -17,13 +18,14 @@ export default function Project() {
         <h1>Synthetic satellite imagery of contrails</h1>
         <div className="prose">
           <p className="text">
-            A comparison of real satellite imagery of contrails with synthetic
-            imagery computed from physics-based contrail modeling. The goal is to
+            Comparing real satellite imagery of contrails with synthetic
+            imagery computed from physics-based contrail modeling is informative of NWP and
+            contrail model limitations. The goal is to
             understand how well the modeling pipeline reproduces the appearance of
             contrails and the surrounding cloud field as seen from space.
             Starting from numerical weather prediction (NWP) fields, the pipeline
             simulates contrail formation and persistence using CoCiP and solves the
-            radiative transfer for each pixel of the scene for each infrared satellite channel.
+            radiative transfer for each pixel of the scene for each infrared satellite channel using CRTM.
           </p>
         </div>
       </div>
@@ -42,50 +44,53 @@ export default function Project() {
       <div className="container blog main gray">
         <ImageCompare images={ASH_IMAGES} defaultLeft="goes" defaultRight="best" />
         <p className="caption">
-          Ash RGB composites over the full scene. Pick an image for each side and drag
-          the handle to blend between them.
+          Ash RGB composites over the GOES-19 full disk for 2025-12-10 00:00Z. Synthetic images use ERA5 data on pressure levels.
         </p>
       </div>
 
-      {/* <div className="container blog main gray">
-        <img src={GRID} alt="Grid of synthetic infrared satellite panels" />
-        <p className="caption">
-          Synthetic infrared satellite panels from the modeling pipeline. Top row
-          uses ERA5 NWP input, bottom row uses HRRR; within each row: contrail-free,
-          with contrails, and with contrails highlighted.
-        </p>
-      </div> */}
+      <div className="container blog main">
+        <div className="prose">
+          <p className="text">
+            The "best" parametrization captures thick cirrus well (brown clouds in ash scheme) and generally looks "good" compared
+            to the real GOES image. The main problem that remains is the spurious "greening" of clouds. The ash transform is defined as:
 
+            <Math block>{String.raw`
+            \begin{aligned}
+              R &= \mathrm{BT}_{12.3\,\mu m} - \mathrm{BT}_{11.2\,\mu m} \\
+              G &= \mathrm{BT}_{11.2\,\mu m} - \mathrm{BT}_{8.5\,\mu m} \\
+              B &= \mathrm{BT}_{11.2\,\mu m}
+            \end{aligned}
+          `}</Math>
+
+            The greening is driven by the BTD being too large. This needs more investigating and may point to discrepancies in particle effective
+            radius, or optical depth (via cloud water content).
+          </p>
+          <p className="text">
+            To make this validation quantitative, we can compare the simulated brightness temperatures (BT) directly to their
+            real counterpart for each pixel. However the differences there will blend error in the NWP model's ability to
+            reproduce reality and the radiative transfer chain.
+          </p>
+        </div>
+      </div>
+{/* 
       <div className="container blog main">
         <Link to="/sim" className="button project accent">
           Explore the interactive model
           <ArrowRight size={16} />
         </Link>
-      </div>
+      </div> */}
 
-      {/* Placeholder writeup — Louis to fill in */}
       <div className="container blog main">
-        <h1>Overview</h1>
-        <p className="text">
-          <em>Placeholder — high-level overview of the project and its motivation.</em>
-        </p>
-
-        <h2>Approach</h2>
-        <p className="text">
-          <em>
-            Placeholder — the modeling pipeline, NWP inputs, and how synthetic
-            imagery is produced.
-          </em>
-        </p>
-
-        <h2>Results</h2>
-        <p className="text">
-          <em>
-            Placeholder — comparison findings once a real-satellite reference image
-            is added (a before/after slider can go here later).
-          </em>
-        </p>
+        <h2>Contrail synthetic satellite imagery</h2>
+        <div className="prose">
+          <p className="text">
+            We can introduce contrails by simulating them using NWP + CoCiP and rasterizing their
+            properties to the the radiative transfer model grid. CRTM does know what contrails are, they
+            are simply treated as a generic ice cloud with a given ice crystal effective radius and water content.
+          </p>
+        </div>
       </div>
+
     </>
   )
 }

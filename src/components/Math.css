@@ -1,0 +1,13 @@
+.katex-block {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+}
+
+/* KaTeX hard-codes text-align:center on both the display wrapper and the
+   .katex node inside it, so left alignment has to override both. */
+.katex-block.katex-left > .katex-display,
+.katex-block.katex-left > .katex-display > .katex {
+  text-align: left;
+}
