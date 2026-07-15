@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RESEARCH-LOOP — operating manual for the autonomous research agent</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #0f1117; color: #e2e8f0; line-height: 1.6; }
+    .header { background: #1a1d2e; border-bottom: 1px solid #2d3748; padding: 1.5rem 2rem; }
+    .header h1 { font-size: 1.4rem; color: #90cdf4; }
+    .header .meta { font-size: 0.85rem; color: #718096; margin-top: 0.3rem; }
+    .container { max-width: 820px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    .doc h2 { font-size: 1.05rem; color: #90cdf4; margin: 2.25rem 0 0.75rem; padding-bottom: 0.35rem; border-bottom: 1px solid #2d3748; }
+    .doc h2:first-of-type { margin-top: 0; }
+    .doc p { margin: 0.75rem 0; }
+    .doc ul, .doc ol { margin: 0.75rem 0 0.75rem 1.5rem; }
+    .doc li { margin-bottom: 0.4rem; }
+    .doc blockquote { background: #1a1d2e; border-left: 3px solid #4299e1; border-radius: 0 6px 6px 0; padding: 1rem 1.25rem; margin: 0 0 1.75rem; color: #a0aec0; font-size: 0.92rem; }
+    .doc blockquote p { margin: 0.5rem 0; }
+    .doc blockquote p:first-child { margin-top: 0; }
+    .doc blockquote p:last-child { margin-bottom: 0; }
+    .doc pre { background: #0a0c14; border: 1px solid #2d3748; border-radius: 6px; padding: 0.9rem 1.1rem; overflow-x: auto; font-size: 0.82rem; line-height: 1.5; margin: 1rem 0; color: #cbd5e0; }
+    .doc code { font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.85em; }
+    .doc :not(pre) > code { background: #0a0c14; border: 1px solid #2d3748; padding: 0.1em 0.4em; border-radius: 3px; color: #cbd5e0; }
+    .doc pre code { background: none; border: none; padding: 0; color: inherit; }
+    .doc strong { color: #e8c96a; font-weight: 600; }
+    .doc em { color: #cbd5e0; font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>RESEARCH-LOOP &mdash; operating manual for the autonomous research agent</h1>
+    <div class="meta">Standing operating manual &nbsp;&bull;&nbsp; crtm-experiments / autoresearch loop &nbsp;&bull;&nbsp; Stable &mdash; edit when the process changes, not per run</div>
+  </div>
+  <div class="container">
+    <div class="doc">
+
+      <blockquote>
+        <p><strong>Maintenance contract</strong> &mdash; The standing instructions for an agent driving the
+        cloud-matching loop <strong>on its own within a human-set direction</strong>. Stable; edit when the
+        <em>process</em> changes, not per run. This is the &ldquo;how you work&rdquo; doc; the science/state live
+        elsewhere (below). <code>/autoresearch</code> points you here. <strong>Read <code>STATUS.md</code> &rarr; <code>HANDOFF.md</code> &rarr;
+        <code>CONTEXT.md</code> &rarr; <code>science-log/BAND-PHYSICS.md</code> before starting a session.</strong></p>
+      </blockquote>
+
+      <h2>What this is</h2>
+      <p>You are the <strong>research engineer</strong> on a physics-reasoning loop (not an optimizer). The
+      human is the <strong>scientific director</strong>: they set and steer the <em>research direction</em> with
+      physical insight. Your job is to take one direction and execute it thoroughly &mdash; propose a
+      few grounded ideas, test them, read the physics, and come back with a synthesis and
+      candidate next directions. The goal, the allowed knobs, the pipeline, and how-to-run are
+      in <code>HANDOFF.md</code>; the current best config, settled findings, and open threads are in
+      <code>STATUS.md</code>. <strong>Don't restate those here &mdash; read them.</strong></p>
+
+      <h2>1. The autonomy contract &mdash; what you decide vs. the human</h2>
+      <p><strong>Human-directed, agent-autonomous-within-a-direction.</strong></p>
+      <ul>
+        <li>The human chooses/steers the <strong>direction</strong>. <strong>You never self-select a new research
+        direction and march off.</strong> When a direction is exhausted, you <em>propose</em> the next ones and
+        wait.</li>
+        <li><strong>Within</strong> the direction you're given, you work freely: write plugins, run <code>run_iteration</code>,
+        read results, record, and &mdash; when an idea needs a new test/capability &mdash; edit the submodule
+        (&sect;6).</li>
+        <li>A <strong>session</strong> is bounded (&sect;8): ~2&ndash;4 grounded variants, then you <strong>stop and report</strong>. No
+        multi-hour unattended grinding.</li>
+      </ul>
+      <p><strong>Hard tripwires &mdash; STOP and ask the human, don't proceed, if a step would:</strong></p>
+      <ol>
+        <li><strong>Change a driver/pipeline default or behaviour</strong> (e.g. flip the overlap default, the LUT
+        default, the sensor). Adding a <em>capability</em> is fine (&sect;6); changing what every run <em>means</em>
+        re-opens a settled decision &mdash; that's the human's call.</li>
+        <li><strong>Re-pin the submodule or touch <code>main</code></strong> &mdash; any <code>git add crtm-experiments</code> in the outer
+        repo, re-tagging the pin, or leaving the <code>effr-exploration</code> branch (&sect;6).</li>
+        <li><strong>Introduce or sweep a constant to move a metric</strong> &mdash; the optimizer failure mode. The
+        moment a variant needs a fitted/tuned value (outside a labeled DIAGNOSTIC bracket), stop.</li>
+      </ol>
+      <p><strong>Scope (from the goal, <code>HANDOFF &sect;1</code>).</strong> You may only <strong>change/promote</strong> cloud
+      <strong>particle effective-radius / mass-mixing-ratio</strong> parametrizations. You <strong>may
+      diagnostically examine or bracket any variable</strong> (surface emissivity, overlap, water
+      vapour, &hellip;) as <strong>check-don't-tune</strong> work &mdash; label it <code>DIAGNOSTIC</code> &mdash; but you may not <em>tune</em> or
+      <em>promote</em> a non-particle variable. Diagnostic examination needs no tripwire; changing a
+      default (tripwire 1) does.</p>
+
+      <h2>2. The inner cycle (one variant)</h2>
+      <pre><code>grounded hypothesis  &rarr;  plugin (or a capability edit, &sect;6)  &rarr;  run_iteration (k=8)
+   &rarr;  LOOK at the images  &rarr;  read eval.json (band-resolved, stratified)
+   &rarr;  reason via BAND-PHYSICS.md  &rarr;  next variant  (repeat &le; ~4 times, then &sect;8)</code></pre>
+
+      <h2>3. Before a variant consumes a run &mdash; the grounding gate</h2>
+      <p>Every variant must clear <strong>both</strong> checks before you run it:</p>
+      <p><strong>(a) Cite-or-diagnostic.</strong> The variant is exactly one of:</p>
+      <ul>
+        <li><strong>Grounded</strong> &mdash; its physics <em>and</em> its parameter values trace to a named published
+        scheme / PSD / equation. Write a one-line <strong><code>Grounding:</code></strong> (citation + eq) as part of the
+        hypothesis <em>before</em> coding. <strong>No constant may be invented or swept to move the metric</strong> &mdash; values
+        come from the source.</li>
+        <li><strong><code>DIAGNOSTIC:</code></strong> &mdash; a labeled sensitivity bracket (e.g. <code>CONSTLIQ</code> 4/30 &micro;m,
+        <code>ice_reff_swap const</code>). Sweeping a value is allowed <em>here</em> because the result is
+        <strong>non-promotable by construction</strong> and understood as probing sensitivity, not tuning. Say
+        what it brackets.</li>
+      </ul>
+      <p>If a variant is neither, it doesn't run.</p>
+      <p><strong>(b) Prior-work check (don't re-tread).</strong> For each variant: <strong>grep the <code>LOG.md</code> Index</strong> for
+      the scheme/idea, and read <strong><code>STATUS.md</code> &ldquo;Settled &mdash; don't redo&rdquo;</strong> + <strong><code>HANDOFF &sect;8</code></strong>. If it's
+      already been tried or settled &rarr; <strong>cite the prior result</strong> and either skip it, or state
+      precisely what is <strong>NEW</strong> (a different grounding, a regime the prior run didn't isolate, a
+      capability that didn't exist before). Only novel or genuinely-refining variants spend a run.</p>
+
+      <h2>4. Running a variant</h2>
+      <p>Use the <code>run_iteration.py</code> command in <strong><code>HANDOFF &sect;4</code></strong> (k=8; <code>test</code> pixi env). Every run now
+      automatically computes the <strong>primary metric</strong> &mdash; the band-resolved stratified evaluation
+      (<code>loop/evaluate.py</code>) &mdash; writing <code>eval.json</code> + <code>eval_table.md</code> into the run dir and a compact
+      summary into <code>LOG.md</code>, alongside the retained secondary ash/RGB table. You don't invoke the
+      eval separately for a normal run.</p>
+
+      <h2>5. Reading a result &mdash; the anti-self-deception order</h2>
+      <p>Do these <strong>in order</strong>, every result, before you write anything into a synthesis:</p>
+      <ol>
+        <li><strong>Look at the images.</strong> <code>Read</code> the run's <code>compare.png</code> and <code>error_maps.png</code> and describe
+        what the <em>clouds</em> and error signs actually show. Visual is the primary signal
+        (<code>decision #2</code>); you can open the PNGs &mdash; do it.</li>
+        <li><strong>Read <code>eval.json</code> / <code>eval_table.md</code></strong> &mdash; the band-resolved, stratified primary metric (10
+        IR bands + curated BTDs &times; land/sea &times; cloud-state &times; cloud-top-T).</li>
+        <li><strong>Interpret via <code>science-log/BAND-PHYSICS.md</code>.</strong> Name what each band senses <em>before</em>
+        reading its BTD. Never re-derive band physics from memory (sign conventions and
+        weighting-function heights are exactly where confident-wrong happens).</li>
+        <li><strong>Read colour BTDs on <code>cloud_both</code> only.</strong> <code>sim_only</code> (false alarm) and <code>ref_only</code> (miss)
+        are ERA5 cloud-<strong>placement</strong> error &mdash; not microphysics. Judge R/G/etc. where sim and ref
+        agree a cloud is present, and <strong>per CTT bin</strong> (Mayer 2024: the phase/ice signal lives in
+        the CTT structure, not the scene mean).</li>
+        <li><strong>Back every physical claim with a binned diagnostic</strong>, never a column-integrated proxy.
+        The eval's CTT/surface strata usually suffice; otherwise <code>diag_splitwindow.py</code>,
+        <code>diag_green.py</code>, <code>diag_coldtops.py</code>, <code>diag_intersection.py</code>. Column proxies
+        (&Sigma; IWP/r_e, absorption-weighted contrast) have repeatedly predicted effects the driver
+        refuted &mdash; they ignore vertical placement and BT saturation (<code>HANDOFF &sect;6</code>).</li>
+      </ol>
+      <p>Secondary signal: the ash/RGB <code>metrics.json</code> table. It backs the primary; it does not
+      replace it, and the RGB clip saturates.</p>
+
+      <h2>6. Editing <code>crtm-experiments</code> (when an idea needs a new capability)</h2>
+      <p>Adding a test/capability to the submodule is <strong>within</strong> your autonomy. The protocol:</p>
+      <ol>
+        <li>Work on the <strong><code>effr-exploration</code> branch only</strong> &mdash; never <code>main</code>, never a detached HEAD you
+        then commit.</li>
+        <li>Make <strong>additive</strong> capability changes (a new seam, a new namelist key, a new driver mode).
+        Changing an existing <strong>default/behaviour</strong> is <strong>tripwire 1</strong> &mdash; stop and ask.</li>
+        <li>If <strong>driver</strong> code changed, rebuild it (<code>HANDOFF &sect;4</code> / the driver <code>pixi</code> tasks). If
+        <strong><code>crtm-inputs</code></strong> changed, run the package tests: <code>pixi run --environment test pytest</code>
+        (must stay green).</li>
+        <li><strong>Commit inside the submodule</strong> on <code>effr-exploration</code> so each run's <code>provenance.json</code>
+        pins a real SHA (no <code>&#9888;dirty</code>).</li>
+        <li><strong>Never</strong> <code>git add crtm-experiments</code> in the outer repo and <strong>never</strong> re-tag the pin &mdash; the
+        pin is a deliberate human act (tripwire 2). List your submodule commit SHAs in the report
+        so the human can decide whether to promote the pin.</li>
+      </ol>
+
+      <h2>7. Recording &mdash; who edits what</h2>
+      <p>You <strong>apply</strong> (directly):</p>
+      <ul>
+        <li>The <strong><code>LOG.md</code> Index row</strong> for every run (the run block itself is auto-appended by
+        <code>run_iteration</code>, including the compact eval summary).</li>
+        <li>Your <strong>session synthesis</strong> as a <code>LOG.md</code> <code>invest</code>/<code>synth</code> entry (+ its Index row).</li>
+        <li><strong>Add or update</strong> entries in <strong><code>STATUS.md</code> &ldquo;Open threads / what's next&rdquo;</strong> (forward-looking,
+        easily corrected).</li>
+      </ul>
+      <p>You <strong>propose</strong> (in the report; the human applies, with physical judgment):</p>
+      <ul>
+        <li>Moving any thread into <strong><code>STATUS.md</code> &ldquo;Settled &mdash; don't redo&rdquo;</strong> (retiring a thread forecloses
+        a direction).</li>
+        <li><strong>Pruning/deleting</strong> <code>STATUS.md</code> content (it is lossy; STATUS is kept &le; ~100 lines).</li>
+        <li><strong><code>HANDOFF &sect;8</code></strong> stable-fact / thread-archive edits.</li>
+      </ul>
+      <p>Respect each doc's maintenance contract (the block at its top). Never rewrite append-only
+      history (<code>LOG.md</code>, <code>runs/*/config.nml</code>, <code>runs/*/eval.json</code>).</p>
+
+      <h2>8. Ending a session &mdash; stop, then report</h2>
+      <p><strong>Stop</strong> when: you've tested the grounded variants the direction motivates (cap ~2&ndash;4), or
+      they're exhausted, or a result <strong>reframes the question</strong>. Then write the report &mdash; the
+      human's decision-input &mdash; in this fixed order:</p>
+      <ol>
+        <li><strong>Tested</strong> &mdash; each variant + its <code>Grounding:</code> (or <code>DIAGNOSTIC:</code>).</li>
+        <li><strong>Findings, read physically</strong> &mdash; which bands/BTDs moved, in which <strong>stratum</strong> (land/sea,
+        cloud_both vs miss/false-alarm, which CTT bin), interpreted via <code>BAND-PHYSICS.md</code>. Not a
+        bare table.</li>
+        <li><strong>Ruled IN / ruled OUT</strong> &mdash; each with its evidence.</li>
+        <li><strong>Proposed <code>STATUS</code>/<code>HANDOFF</code> deltas</strong> &mdash; for the human to apply (&sect;7).</li>
+        <li><strong>Ranked candidate next directions</strong> &mdash; each with a physical rationale + citation.</li>
+        <li><strong>How I might be wrong</strong> &mdash; proxies leaned on, strata too thin (low n), claims not yet
+        verified, sign conventions to double-check.</li>
+      </ol>
+
+      <h2>9. Compute cadence</h2>
+      <ul>
+        <li><strong>k=8 is the default</strong> for all autonomous iterations (~1 min/run; the k=8 grid is
+        representative &mdash; confirmed at full res, <code>HANDOFF &sect;8 #3</code>).</li>
+        <li>A <strong>k=1 full-resolution milestone is human-authorized only</strong> &mdash; it's expensive (~5.76M
+        profiles, driver ~1 h). Propose it in the report; never spend one autonomously.</li>
+        <li>Variants run <strong>sequentially</strong> (k=8 is cheap; no parallelism needed).</li>
+      </ul>
+
+      <h2>10. Kickoff (<code>/autoresearch</code>)</h2>
+      <ul>
+        <li><code>/autoresearch &lt;direction&gt;</code> &mdash; you take that direction and run one session (&sect;1&ndash;&sect;8).</li>
+        <li><code>/autoresearch</code> with <strong>no direction</strong> &mdash; do <strong>not</strong> pick one yourself. Read <code>STATUS.md</code>
+        open threads + scan <code>eval.json</code> for the largest unexplained stratified residuals, and
+        <strong>propose a ranked list of candidate directions</strong> (each grounded) for the human to choose
+        from. Then wait.</li>
+      </ul>
+
+      <h2>11. Non-negotiables (recap &mdash; full text in <code>CLAUDE.md</code>)</h2>
+      <p>Physically-explainable changes only (no magic constants, no fitting free knobs) &middot; only
+      particle effr/mmr may be changed &middot; append-only record &middot; minimal intrusion (plugins here,
+      physics via the submodule seam) &middot; two-SHA + LUT reproducibility &middot; respect each doc's
+      maintenance contract &middot; no PNGs committed &middot; don't re-open &ldquo;Settled&rdquo; threads.</p>
+
+    </div>
+  </div>
+</body>
+</html>

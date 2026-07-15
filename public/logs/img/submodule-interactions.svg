@@ -1,0 +1,259 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1360 1240" width="1360" height="1240" role="img" aria-labelledby="t d">
+<title id="t">The crtm-experiments submodule — pin, seam, run, and the edit/bump lifecycle</title>
+<desc id="d">Technical reference for how the crtm-effr-exploration repo interacts with its pinned crtm-experiments submodule: the outer repo pins the submodule by a committed gitlink (75d19d9, tagged effr-pin-2026-07-15); this repo's plugins register into the submodule's crtm-inputs package through the ADR-0001 extension seam without forking; one run threads run_iteration.py through the submodule's pixi env, crtm-inputs-cli, the compiled crtm-driver and its CloudCoeff lookup table; the pin has three views (committed gitlink = authoritative, submodule working tree, tag name) reconciled by loop/check_pin.sh; and changes follow an additive edit-on-a-branch protocol where only the human deliberately bumps the pin. provenance.json records the two SHAs plus the LUT hash.</desc>
+
+<style>
+  :root{
+    --bg:#ffffff; --ink:#1f2328; --muted:#57606a; --line:#8c959f; --rule:#d8dee4;
+    --doc-f:#e9f1fb;  --doc-s:#3b6ea5;
+    --key-f:#fff2e8;  --key-s:#c2410c;
+    --log-f:#e6f4ec;  --log-s:#2b7a4b;
+    --code-f:#f2eafb; --code-s:#6f42c1;
+    --data-f:#f1f2f4; --data-s:#6e7781;
+    --think-f:#fdeaf0;--think-s:#b02a4a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0d1117; --ink:#e6edf3; --muted:#9198a1; --line:#6e7681; --rule:#30363d;
+      --doc-f:#10233a;  --doc-s:#5b9bd5;
+      --key-f:#3a1d0c;  --key-s:#f0883e;
+      --log-f:#0d2a1a;  --log-s:#3fb950;
+      --code-f:#231437; --code-s:#a371f7;
+      --data-f:#161b22; --data-s:#8b949e;
+      --think-f:#3a1020;--think-s:#f0637c;
+    }
+  }
+  .bg{fill:var(--bg)}
+  text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; fill:var(--ink)}
+  .mono,.cmd,.cmdm{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .h1{font-size:21px;font-weight:700}
+  .h2{font-size:12.5px;font-weight:700;fill:var(--muted);letter-spacing:.4px}
+  .sub{font-size:12.5px;fill:var(--muted)}
+  .bt{font-size:12.5px;font-weight:700}
+  .btm{font-size:11px;font-weight:700}
+  .bd{font-size:10.4px;fill:var(--ink)}
+  .bm{font-size:10.4px;fill:var(--muted)}
+  .it{font-size:9.4px;fill:var(--muted);font-style:italic}
+  .el{font-size:9.6px;fill:var(--muted)}
+  .elk{font-size:9.6px;fill:var(--key-s);font-weight:700}
+  .cmd{font-size:9.7px;fill:var(--ink)}
+  .cmdm{font-size:9.7px;fill:var(--muted)}
+  .chip{font-size:10.2px}
+  .pill{font-size:8.6px;font-weight:700;letter-spacing:.4px;text-anchor:middle}
+  .tag{font-size:8.2px;font-weight:700;letter-spacing:.3px;text-anchor:middle}
+
+  .edge{fill:none;stroke:var(--line);stroke-width:1.6;marker-end:url(#ah)}
+  .edge2{fill:none;stroke:var(--line);stroke-width:1.5;marker-start:url(#ah);marker-end:url(#ah)}
+  .pin{fill:none;stroke:var(--key-s);stroke-width:3;marker-end:url(#ahk)}
+  .flow{fill:none;stroke:var(--code-s);stroke-width:1.7;marker-end:url(#ahc)}
+  .ah{fill:var(--line)} .ahk{fill:var(--key-s)} .ahc{fill:var(--code-s)}
+</style>
+
+<defs>
+  <marker id="ah"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah"  d="M0,0 L10,5 L0,10 z"/></marker>
+  <marker id="ahk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ahk" d="M0,0 L10,5 L0,10 z"/></marker>
+  <marker id="ahc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ahc" d="M0,0 L10,5 L0,10 z"/></marker>
+</defs>
+
+<rect class="bg" x="0" y="0" width="1360" height="1240"/>
+
+<!-- ============ TITLE ============ -->
+<text class="h1" x="32" y="38">The <tspan class="mono">crtm-experiments</tspan> submodule — pin · seam · run · lifecycle</text>
+<text class="sub" x="32" y="60">Technical reference: how this repo pins the submodule, plugs into it without forking, runs through it, and how changes move.</text>
+
+<rect x="1052" y="28" width="12" height="11" rx="2" fill="var(--code-f)" stroke="var(--code-s)"/>
+<text class="el" x="1070" y="38">lives in THIS repo (crtm-effr-exploration)</text>
+<rect x="1052" y="46" width="12" height="11" rx="2" fill="var(--doc-f)" stroke="var(--doc-s)"/>
+<text class="el" x="1070" y="56">lives in the SUBMODULE (crtm-experiments)</text>
+
+<!-- ============ 1. TOPOLOGY ============ -->
+<text class="h2" x="32" y="92">① TOPOLOGY — the outer repo pins the submodule by a gitlink; the submodule holds the seam (crtm-inputs) and the RT engine (crtm-driver)</text>
+
+<!-- outer repo -->
+<rect x="32" y="108" width="440" height="224" rx="9" fill="var(--code-f)" stroke="var(--code-s)" stroke-width="1.8"/>
+<text class="bt" x="48" y="132">crtm-effr-exploration</text>
+<rect x="384" y="117" width="80" height="16" rx="8" fill="var(--code-s)"/>
+<text class="pill" x="424" y="128.5" style="fill:var(--bg)">OUTER REPO</text>
+
+<rect x="48" y="146" width="408" height="30" rx="6" fill="var(--code-f)" stroke="var(--code-s)" stroke-width="1"/>
+<text class="chip mono" x="60" y="165">plugins/  —  *_plugin.py + physics (wyser.py, martin_liquid.py …)</text>
+<rect x="48" y="182" width="408" height="30" rx="6" fill="var(--code-f)" stroke="var(--code-s)" stroke-width="1"/>
+<text class="chip mono" x="60" y="201">loop/  —  run_iteration.py · ashlib · diag_* · runs/</text>
+<rect x="48" y="218" width="408" height="30" rx="6" fill="var(--doc-f)" stroke="var(--doc-s)" stroke-width="1"/>
+<text class="chip" x="60" y="237">STATUS · HANDOFF · CONTEXT · science-log/ · docs/adr/</text>
+<rect x="48" y="254" width="408" height="34" rx="6" fill="var(--key-f)" stroke="var(--key-s)" stroke-width="1.8"/>
+<text class="chip mono" x="60" y="275">crtm-experiments/  —  gitlink  →  the pin</text>
+
+<!-- submodule -->
+<rect x="560" y="108" width="500" height="224" rx="9" fill="var(--doc-f)" stroke="var(--doc-s)" stroke-width="1.8"/>
+<text class="bt" x="576" y="132">crtm-experiments</text>
+<rect x="976" y="117" width="76" height="16" rx="8" fill="var(--doc-s)"/>
+<text class="pill" x="1014" y="128.5" style="fill:var(--bg)">SUBMODULE</text>
+<text class="it" x="576" y="150">= main + a thin extension seam · never the superseded physics</text>
+
+<rect x="576" y="160" width="468" height="34" rx="6" fill="var(--doc-f)" stroke="var(--doc-s)" stroke-width="1.4"/>
+<text class="chip mono" x="588" y="181">crtm-inputs/  —  Python package (the CRTM input builder)</text>
+<rect x="972" y="167" width="64" height="16" rx="8" fill="var(--doc-s)"/>
+<text class="tag" x="1004" y="178.5" style="fill:var(--bg)">THE SEAM</text>
+<rect x="576" y="202" width="468" height="34" rx="6" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1"/>
+<text class="chip mono" x="588" y="223">crtm-driver/  —  Fortran RT engine · build/bin · CRTMv3/fix LUTs</text>
+<rect x="576" y="244" width="468" height="34" rx="6" fill="var(--doc-f)" stroke="var(--doc-s)" stroke-width="1"/>
+<text class="chip mono" x="588" y="265">doc/  —  package + driver documentation</text>
+
+<!-- pin label + arrow in the gap -->
+<text class="elk" x="516" y="170" text-anchor="middle">PIN</text>
+<text class="el" x="516" y="183" text-anchor="middle">gitlink</text>
+<text class="el" x="516" y="195" text-anchor="middle">(in THIS tree)</text>
+<path class="pin" d="M472,214 H558"/>
+<text class="mono" x="516" y="238" text-anchor="middle" style="font-size:10px;font-weight:700;fill:var(--key-s)">75d19d9</text>
+<text class="el" x="516" y="252" text-anchor="middle">effr-pin-</text>
+<text class="el" x="516" y="264" text-anchor="middle">2026-07-15</text>
+<text class="el" x="516" y="282" text-anchor="middle">→ check_pin.sh</text>
+
+<!-- remote -->
+<rect x="1130" y="150" width="190" height="150" rx="9" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.4"/>
+<text class="bt" x="1146" y="174">git remote (origin)</text>
+<text class="cmdm" x="1146" y="196">github.mit.edu:</text>
+<text class="cmdm" x="1146" y="210">  lrobion/crtm-</text>
+<text class="cmdm" x="1146" y="224">  experiments.git</text>
+<text class="el" x="1146" y="248">branch:</text>
+<text class="el" x="1146" y="260">effr-exploration</text>
+<text class="el" x="1146" y="284">tags: effr-pin-*</text>
+<path class="edge2" d="M1060,225 H1128"/>
+<text class="el" x="1094" y="204" text-anchor="middle">git submodule</text>
+<text class="el" x="1094" y="216" text-anchor="middle">update --init</text>
+
+<!-- ============ 2. SEAM ============ -->
+<text class="h2" x="32" y="370">② THE SEAM — plugins register into the package at runtime; no fork (ADR 0001)</text>
+
+<rect x="40" y="384" width="264" height="56" rx="8" fill="var(--code-f)" stroke="var(--code-s)" stroke-width="1.4"/>
+<text class="btm mono" x="54" y="406">plugins/*_plugin.py</text>
+<text class="bm" x="54" y="424">the scheme lives HERE (this repo)</text>
+
+<path class="edge" d="M304,412 H352"/>
+<text class="el" x="328" y="404" text-anchor="middle">imports</text>
+
+<rect x="352" y="384" width="288" height="56" rx="8" fill="var(--doc-f)" stroke="var(--doc-s)" stroke-width="1.4"/>
+<text class="btm mono" x="366" y="406">crtm_inputs.met.effr</text>
+<text class="bm" x="366" y="424">register_{ice,liquid,snow}_reff_scheme()</text>
+
+<rect x="40" y="454" width="600" height="46" rx="8" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.2"/>
+<text class="el" x="54" y="472">one reproducible command — the CLI imports the plugin, then resolves the scheme name:</text>
+<text class="cmd" x="54" y="491">crtm-inputs-cli --radius-parametrization WYSER --scheme-plugin plugins/wyser_plugin.py --snow-as-ice</text>
+
+<text class="el" x="40" y="522">The registry is then consulted by <tspan class="mono">compute_*_reff</tspan> · <tspan class="mono">from_scheme_name</tspan> · validation — compatible sources are enforced.</text>
+
+<rect x="40" y="534" width="600" height="62" rx="8" fill="var(--log-f)" stroke="var(--log-s)" stroke-width="1.6"/>
+<text class="bt" x="54" y="556">PROMOTION</text>
+<text class="bd" x="54" y="575">once a scheme proves out, it is moved INTO <tspan class="mono">crtm_inputs.met.effr</tspan> as a built-in</text>
+<text class="bd" x="54" y="590">and the plugin retired — that is an edit to the submodule (governed by ⑤).</text>
+
+<!-- ============ 3. ONE RUN ============ -->
+<text class="h2" x="688" y="370">③ ONE RUN — the data path threads through the submodule</text>
+
+<rect x="700" y="384" width="360" height="32" rx="7" fill="var(--code-f)" stroke="var(--code-s)" stroke-width="1.4"/>
+<text class="btm mono" x="712" y="404">loop/run_iteration.py<tspan class="bm" style="font-weight:400">   · this repo · orchestrator</tspan></text>
+<path class="flow" d="M880,416 V430"/>
+<text class="cmdm" x="1074" y="424">pixi run --manifest-path</text>
+<text class="cmdm" x="1074" y="436">crtm-experiments/crtm-inputs</text>
+<text class="cmdm" x="1074" y="448">--environment test</text>
+
+<rect x="700" y="430" width="360" height="44" rx="7" fill="var(--doc-f)" stroke="var(--doc-s)" stroke-width="1.4"/>
+<text class="btm mono" x="712" y="450">crtm-inputs-cli   · submodule pkg</text>
+<text class="bm" x="712" y="466">+ --scheme-plugin plugins/… (this repo)</text>
+<path class="flow" d="M880,474 V490"/>
+
+<rect x="760" y="490" width="240" height="30" rx="7" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.2"/>
+<text class="mono" x="880" y="509" text-anchor="middle" style="font-size:11px">crtm_input.nc</text>
+<path class="flow" d="M880,520 V536"/>
+<text class="cmdm" x="1075" y="528">crtm-driver/build/bin/crtm-driver</text>
+<text class="cmdm" x="1075" y="540">+ CRTMv3/fix CloudCoeff LUT</text>
+<text class="el" x="1075" y="552">(both from the submodule)</text>
+
+<rect x="700" y="536" width="360" height="34" rx="7" fill="var(--doc-f)" stroke="var(--doc-s)" stroke-width="1.4"/>
+<text class="btm mono" x="712" y="557">crtm-driver   · submodule · compiled binary</text>
+<path class="flow" d="M880,570 V586"/>
+
+<rect x="760" y="586" width="240" height="30" rx="7" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.2"/>
+<text class="mono" x="880" y="605" text-anchor="middle" style="font-size:11px">crtm_out.nc</text>
+<path class="flow" d="M880,616 V632"/>
+<text class="cmdm" x="1075" y="628">loop/ashlib.py  (this repo)</text>
+
+<rect x="700" y="632" width="360" height="14" rx="4" fill="var(--code-f)" stroke="var(--code-s)" stroke-width="1"/>
+<text class="mono" x="880" y="643" text-anchor="middle" style="font-size:9px">runs/&lt;label&gt;/ : eval.json · metrics.json · config.nml · provenance.json</text>
+
+<!-- ============ 4. THE PIN ============ -->
+<text class="h2" x="32" y="686">④ THE PIN — three views of one commit; the committed gitlink is authoritative</text>
+
+<rect x="32" y="700" width="410" height="98" rx="8" fill="var(--key-f)" stroke="var(--key-s)" stroke-width="1.8"/>
+<text class="bt" x="48" y="722">A · Committed gitlink  =  THE PIN</text>
+<text class="cmd" x="48" y="742">git ls-tree HEAD crtm-experiments</text>
+<text class="bd" x="48" y="762">→ <tspan class="mono" style="font-weight:700;fill:var(--key-s)">75d19d9…</tspan>  recorded in THIS repo's tree</text>
+<text class="it" x="48" y="782">authoritative — not the prose SHA, not the checkout</text>
+
+<rect x="475" y="700" width="410" height="98" rx="8" fill="var(--doc-f)" stroke="var(--doc-s)" stroke-width="1.4"/>
+<text class="bt" x="491" y="722">B · Submodule working tree</text>
+<text class="cmd" x="491" y="742">git -C crtm-experiments rev-parse HEAD</text>
+<text class="bd" x="491" y="762">what is actually checked out (detached at the pin)</text>
+<text class="it" x="491" y="782">should equal A — check_pin.sh verifies this</text>
+
+<rect x="918" y="700" width="410" height="98" rx="8" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.4"/>
+<text class="bt" x="934" y="722">C · Tag  =  the pin's stable name</text>
+<text class="cmd" x="934" y="742">git describe --tags → effr-pin-2026-07-15</text>
+<text class="bd" x="934" y="762">a human handle for the pinned commit</text>
+<text class="it" x="934" y="782">push the tag so the name is shared</text>
+
+<rect x="32" y="812" width="636" height="56" rx="8" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.2"/>
+<text class="btm mono" x="48" y="833">loop/check_pin.sh</text>
+<text class="bd" x="48" y="850">prints A with its tag and EXITS 1 (drift) if A ≠ B.</text>
+<text class="el" x="48" y="863">tip: git config diff.submodule log · status.submoduleSummary true — makes pin moves visible in git status</text>
+
+<rect x="692" y="812" width="636" height="56" rx="8" fill="var(--think-f)" stroke="var(--think-s)" stroke-width="1.8"/>
+<text class="bt" x="708" y="833">⚠ drift hazard</text>
+<text class="bd" x="708" y="850">a stray  <tspan class="mono" style="font-weight:700">git add crtm-experiments</tspan>  after B moved silently RE-PINS A.</text>
+<text class="el" x="708" y="863">restore the pin:  git submodule update --init crtm-experiments</text>
+
+<!-- ============ 5. LIFECYCLE ============ -->
+<text class="h2" x="32" y="900">⑤ CHANGING THE SUBMODULE — the agent edits (additive, on a branch); only the human bumps the pin</text>
+
+<!-- agent lane -->
+<rect x="32" y="914" width="618" height="188" rx="9" fill="var(--bg)" stroke="var(--log-s)" stroke-width="1.8"/>
+<rect x="32" y="914" width="618" height="26" rx="9" fill="var(--log-f)" stroke="var(--log-s)" stroke-width="0"/>
+<text class="bt" x="48" y="932" style="fill:var(--log-s)">AGENT — autonomous within a direction</text>
+<text class="bd" x="48" y="960"><tspan class="mono" style="font-weight:700">1</tspan>  git checkout effr-exploration  <tspan class="bm">— never main; never a detached HEAD you then commit</tspan></text>
+<text class="bd" x="48" y="982"><tspan class="mono" style="font-weight:700">2</tspan>  additive change only <tspan class="bm">— a new seam · namelist key · driver mode</tspan></text>
+<text class="bd" x="48" y="1004"><tspan class="mono" style="font-weight:700">3</tspan>  driver changed → rebuild (pixi);  crtm-inputs changed →</text>
+<text class="cmd" x="66" y="1020">pixi run --environment test pytest  <tspan class="bm" style="font-family:inherit">(must stay green)</tspan></text>
+<text class="bd" x="48" y="1042"><tspan class="mono" style="font-weight:700">4</tspan>  commit INSIDE the submodule on effr-exploration</text>
+<text class="bm" x="66" y="1058">→ provenance.json pins a real SHA (no ⚠dirty)</text>
+<text class="bd" x="48" y="1080"><tspan class="mono" style="font-weight:700">5</tspan>  list the submodule commit SHA in the session report</text>
+
+<!-- handoff arrow -->
+<path class="edge" d="M652,1008 H706"/>
+<text class="el" x="679" y="1000" text-anchor="middle">hand off</text>
+
+<!-- human lane -->
+<rect x="708" y="914" width="620" height="188" rx="9" fill="var(--bg)" stroke="var(--key-s)" stroke-width="1.8"/>
+<rect x="708" y="914" width="620" height="26" rx="9" fill="var(--key-f)" stroke="var(--key-s)" stroke-width="0"/>
+<text class="bt" x="724" y="932" style="fill:var(--key-s)">HUMAN — the deliberate pin bump</text>
+<text class="bd" x="724" y="962"><tspan class="mono" style="font-weight:700">6</tspan>  merge main forward into effr-exploration</text>
+<text class="bm" x="742" y="978">— never re-graft the seam (append-only history)</text>
+<text class="bd" x="724" y="1002"><tspan class="mono" style="font-weight:700">7</tspan>  move submodule HEAD, then in the OUTER repo:</text>
+<text class="cmd" x="742" y="1018">git add crtm-experiments &amp;&amp; git commit  <tspan class="bm" style="font-family:inherit">(moves gitlink A)</tspan></text>
+<text class="bd" x="724" y="1042"><tspan class="mono" style="font-weight:700">8</tspan>  git tag effr-pin-&lt;date&gt;  &amp;&amp;  push the tag</text>
+<text class="it" x="724" y="1070">results are only comparable within one submodule epoch (both SHAs</text>
+<text class="it" x="724" y="1083">+ the LUT hash are recorded per run — see below)</text>
+
+<!-- tripwire band -->
+<rect x="32" y="1116" width="1296" height="40" rx="8" fill="var(--think-f)" stroke="var(--think-s)" stroke-width="1.8"/>
+<text class="bt" x="48" y="1134" style="fill:var(--think-s)">TRIPWIRES — stop &amp; ask:</text>
+<text class="bd" x="248" y="1134">never <tspan class="mono" style="font-weight:700">git add crtm-experiments</tspan> in the outer repo · never re-tag the pin · never change a default/behaviour (overlap · LUT · sensor)</text>
+<text class="el" x="48" y="1149">adding a capability is within the agent's autonomy; changing what every run <tspan font-style="italic">means</tspan> re-opens a settled decision — that is the human's call</text>
+
+<!-- provenance triple -->
+<rect x="32" y="1170" width="1296" height="52" rx="8" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.4"/>
+<text class="btm mono" x="48" y="1191">provenance.json</text>
+<text class="bd" x="48" y="1208">ties a run to an exact state — the two-SHA + LUT reproducibility triple:</text>
+<text class="mono" x="520" y="1208" style="font-size:10.5px"><tspan style="font-weight:700;fill:var(--code-s)">exploration_repo.sha</tspan>  ⊕  <tspan style="font-weight:700;fill:var(--doc-s)">crtm_experiments_submodule.sha</tspan>  ⊕  <tspan style="font-weight:700;fill:var(--key-s)">cloud_coeff.sha256</tspan></text>
+
+</svg>

@@ -1,0 +1,259 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 1015" width="1280" height="1015" role="img" aria-labelledby="t d">
+<title id="t">How the autonomous research harness works with an AI agent</title>
+<desc id="d">A human scientific director sets a research direction; the AI agent reads a layered set of human-maintained instruction files, then runs a physics-reasoning loop (judgment). Each "run" step invokes a fully deterministic pipeline (ERA5 to simulated image to metrics) that is reproducible from two git commits plus a hashed lookup table. The agent's only way to change the physics is a narrow, guarded plugin/submodule seam into the pinned crtm-experiments code.</desc>
+
+<style>
+  :root{
+    --bg:#ffffff; --ink:#1f2328; --muted:#57606a; --line:#8c959f; --rule:#d8dee4;
+    --doc-f:#e9f1fb;  --doc-s:#3b6ea5;
+    --key-f:#fff2e8;  --key-s:#c2410c;
+    --log-f:#e6f4ec;  --log-s:#2b7a4b;
+    --code-f:#f2eafb; --code-s:#6f42c1;
+    --data-f:#f1f2f4; --data-s:#6e7781;
+    --think-f:#fdeaf0;--think-s:#b02a4a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0d1117; --ink:#e6edf3; --muted:#9198a1; --line:#6e7681; --rule:#30363d;
+      --doc-f:#10233a;  --doc-s:#5b9bd5;
+      --key-f:#3a1d0c;  --key-s:#f0883e;
+      --log-f:#0d2a1a;  --log-s:#3fb950;
+      --code-f:#231437; --code-s:#a371f7;
+      --data-f:#161b22; --data-s:#8b949e;
+      --think-f:#3a1020;--think-s:#f0637c;
+    }
+  }
+  .bg{fill:var(--bg)}
+  text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; fill:var(--ink)}
+  .h1{font-size:22px;font-weight:700}
+  .h2{font-size:12px;font-weight:700;fill:var(--muted);letter-spacing:.7px}
+  .sub{font-size:12.5px;fill:var(--muted)}
+  .bt{font-size:13.5px;font-weight:700}
+  .btm{font-size:12px;font-weight:700}
+  .bd{font-size:10.6px;fill:var(--ink)}
+  .bm{font-size:10.6px;fill:var(--muted)}
+  .it{font-size:9.8px;fill:var(--muted);font-style:italic}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .el{font-size:9.8px;fill:var(--muted)}
+  .elb{font-size:9.8px;fill:var(--muted);font-weight:700}
+  .pill{font-size:9px;font-weight:700;letter-spacing:.5px;text-anchor:middle}
+
+  .edge{fill:none;stroke:var(--line);stroke-width:1.6;marker-end:url(#ah)}
+  .edge2{fill:none;stroke:var(--line);stroke-width:1.6;marker-start:url(#ah);marker-end:url(#ah)}
+  .flow{fill:none;stroke:var(--log-s);stroke-width:1.8;marker-end:url(#ahg)}
+  .think{fill:none;stroke:var(--think-s);stroke-width:1.8;marker-end:url(#aht)}
+  .loop{fill:none;stroke:var(--think-s);stroke-width:2.4;marker-end:url(#aht)}
+  .ah{fill:var(--line)} .aht{fill:var(--think-s)} .ahg{fill:var(--log-s)}
+  .rule{stroke:var(--rule);stroke-width:1}
+</style>
+
+<defs>
+  <marker id="ah"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ah"  d="M0,0 L10,5 L0,10 z"/></marker>
+  <marker id="aht" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path class="aht" d="M0,0 L10,5 L0,10 z"/></marker>
+  <marker id="ahg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="ahg" d="M0,0 L10,5 L0,10 z"/></marker>
+</defs>
+
+<rect class="bg" x="0" y="0" width="1280" height="1015"/>
+
+<!-- ============ TITLE ============ -->
+<text class="h1" x="32" y="40">How an autonomous research loop works with an AI agent</text>
+<text class="sub" x="32" y="62">A human sets the direction · the agent reasons within guardrails · a deterministic pipeline turns each idea into reproducible numbers</text>
+
+<!-- legend swatches: the core contrast -->
+<rect x="1090" y="30" width="12" height="11" rx="2" fill="var(--think-f)" stroke="var(--think-s)"/>
+<text class="el" x="1108" y="40">agent judgment (varies)</text>
+<rect x="1090" y="48" width="12" height="11" rx="2" fill="var(--log-f)" stroke="var(--log-s)"/>
+<text class="el" x="1108" y="58">deterministic (fixed)</text>
+
+<!-- ============ 1. ROLES ============ -->
+<text class="h2" x="32" y="92">① TWO ROLES — a human directs, the agent executes</text>
+
+<rect x="32" y="106" width="372" height="120" rx="9" fill="var(--key-f)" stroke="var(--key-s)" stroke-width="1.8"/>
+<text class="bt" x="48" y="134">Human — Scientific Director</text>
+<rect x="300" y="114" width="96" height="17" rx="8.5" fill="var(--key-s)"/>
+<text class="pill" x="348" y="126.5" style="fill:var(--bg)">SETS DIRECTION</text>
+<text class="bd" x="48" y="160">Chooses and steers what to investigate,</text>
+<text class="bd" x="48" y="178">using physical insight into the problem.</text>
+<text class="bm" x="48" y="202">The agent never picks a new direction on its own.</text>
+
+<rect x="876" y="106" width="372" height="120" rx="9" fill="var(--think-f)" stroke="var(--think-s)" stroke-width="1.8"/>
+<text class="bt" x="892" y="134">AI Agent — Research Engineer</text>
+<rect x="1166" y="114" width="74" height="17" rx="8.5" fill="var(--think-s)"/>
+<text class="pill" x="1203" y="126.5" style="fill:var(--bg)">EXECUTES</text>
+<text class="bd" x="892" y="160">Takes one direction and runs it end-to-end:</text>
+<text class="bd" x="892" y="178">propose grounded ideas · test · read the physics.</text>
+<text class="bm" x="892" y="202">Works freely within the direction, then stops and reports.</text>
+
+<path class="edge" d="M414,150 H864"/>
+<text class="elb" x="640" y="143" text-anchor="middle">a direction / one question</text>
+<path class="edge" d="M864,196 H414"/>
+<text class="el" x="640" y="214" text-anchor="middle">synthesis + ranked candidate next directions</text>
+
+<!-- ============ 2. INSTRUCTIONS ============ -->
+<text class="h2" x="32" y="266">② THE STANDING INSTRUCTIONS — the agent's memory between sessions (human-maintained, read first in order)</text>
+
+<!-- STATUS -->
+<rect x="32" y="286" width="224" height="120" rx="8" fill="var(--key-f)" stroke="var(--key-s)" stroke-width="1.8"/>
+<text class="btm" x="48" y="312">STATUS.md</text>
+<rect x="168" y="294" width="80" height="17" rx="8.5" fill="var(--key-s)"/>
+<text class="pill" x="208" y="306.5" style="fill:var(--bg)">READ FIRST</text>
+<text class="bd" x="48" y="338">where we are / what's next</text>
+<text class="bm" x="48" y="356">current best · open threads</text>
+<text class="it" x="48" y="376">kept short, pruned</text>
+
+<!-- HANDOFF -->
+<rect x="272" y="286" width="224" height="120" rx="8" fill="var(--doc-f)" stroke="var(--doc-s)" stroke-width="1.2"/>
+<text class="btm" x="288" y="312">HANDOFF.md</text>
+<text class="bd" x="288" y="338">the stable orientation:</text>
+<text class="bd" x="288" y="356">goal · decisions · how-to-run</text>
+<text class="bm" x="288" y="376">verified facts · gotchas</text>
+
+<!-- CONTEXT -->
+<rect x="512" y="286" width="224" height="120" rx="8" fill="var(--doc-f)" stroke="var(--doc-s)" stroke-width="1.2"/>
+<text class="btm" x="528" y="312">CONTEXT.md</text>
+<text class="bd" x="528" y="338">the shared glossary /</text>
+<text class="bd" x="528" y="356">controlled vocabulary</text>
+<text class="it" x="528" y="376">reference vs simulated image…</text>
+
+<!-- RESEARCH-LOOP -->
+<rect x="752" y="286" width="224" height="120" rx="8" fill="var(--doc-f)" stroke="var(--doc-s)" stroke-width="1.2"/>
+<text class="btm" x="768" y="312">RESEARCH-LOOP.md</text>
+<text class="bd" x="768" y="338">the operating manual:</text>
+<text class="bd" x="768" y="356">autonomy contract ·</text>
+<text class="bd" x="768" y="374">grounding gate · guardrails</text>
+
+<!-- science-log -->
+<rect x="992" y="286" width="224" height="120" rx="8" fill="var(--log-f)" stroke="var(--log-s)" stroke-width="1.8"/>
+<text class="btm" x="1008" y="312">science-log/</text>
+<rect x="1118" y="294" width="90" height="17" rx="8.5" fill="var(--log-s)"/>
+<text class="pill" x="1163" y="306.5" style="fill:var(--bg)">APPEND-ONLY</text>
+<text class="bd" x="1008" y="338">LOG.md — the run history</text>
+<text class="bd" x="1008" y="356">BAND-PHYSICS.md —</text>
+<text class="bd" x="1008" y="374">what each channel senses</text>
+
+<path class="edge" d="M256,346 H272"/>
+<path class="edge" d="M496,346 H512"/>
+<path class="edge" d="M736,346 H752"/>
+<path class="edge" d="M976,346 H992"/>
+
+<text class="it" x="32" y="430">Human-maintained · each file carries a "maintenance contract" (prune / edit-in-place, don't just append) — this keeps the agent's working context stable and legible across sessions.</text>
+
+<!-- ============ 3. REASONING LOOP ============ -->
+<text class="h2" x="32" y="470">③ THE REASONING LOOP — physics reasoning, not optimization &#160;·&#160; this is the agent's judgment, not fixed code</text>
+
+<!-- step boxes: think/pink -->
+<rect x="40" y="486" width="176" height="84" rx="8" fill="var(--think-f)" stroke="var(--think-s)" stroke-width="1.4"/>
+<text class="bt" x="128" y="512" text-anchor="middle" style="font-size:12px">1 · Hypothesis</text>
+<text class="bm" x="128" y="533" text-anchor="middle">grounded in a</text>
+<text class="bm" x="128" y="549" text-anchor="middle">published scheme</text>
+
+<rect x="240" y="486" width="176" height="84" rx="8" fill="var(--think-f)" stroke="var(--think-s)" stroke-width="2.6"/>
+<text class="bt" x="328" y="512" text-anchor="middle" style="font-size:12px">2 · Grounding gate</text>
+<text class="bm" x="328" y="533" text-anchor="middle">cite-or-diagnostic +</text>
+<text class="bm" x="328" y="549" text-anchor="middle">"tried before?" check</text>
+
+<rect x="440" y="486" width="176" height="84" rx="8" fill="var(--think-f)" stroke="var(--think-s)" stroke-width="1.4"/>
+<text class="bt" x="528" y="512" text-anchor="middle" style="font-size:12px">3 · Build</text>
+<text class="bm" x="528" y="533" text-anchor="middle">a plugin (or a</text>
+<text class="bm" x="528" y="549" text-anchor="middle">capability edit → ⑤)</text>
+
+<rect x="640" y="486" width="176" height="84" rx="8" fill="var(--think-f)" stroke="var(--think-s)" stroke-width="1.4"/>
+<rect x="640" y="486" width="6" height="84" rx="3" fill="var(--log-s)"/>
+<text class="bt" x="731" y="512" text-anchor="middle" style="font-size:12px">4 · Run</text>
+<text class="bm" x="731" y="533" text-anchor="middle">invoke pipeline ④</text>
+<text class="bm" x="731" y="549" text-anchor="middle">on the k=8 grid</text>
+
+<rect x="840" y="486" width="176" height="84" rx="8" fill="var(--think-f)" stroke="var(--think-s)" stroke-width="1.4"/>
+<text class="bt" x="928" y="512" text-anchor="middle" style="font-size:12px">5 · Look + read</text>
+<text class="bm" x="928" y="533" text-anchor="middle">the images + band-</text>
+<text class="bm" x="928" y="549" text-anchor="middle">resolved metrics</text>
+
+<rect x="1040" y="486" width="176" height="84" rx="8" fill="var(--think-f)" stroke="var(--think-s)" stroke-width="1.4"/>
+<text class="bt" x="1128" y="512" text-anchor="middle" style="font-size:12px">6 · Reason</text>
+<text class="bm" x="1128" y="533" text-anchor="middle">interpret via</text>
+<text class="bm" x="1128" y="549" text-anchor="middle">band physics</text>
+
+<path class="think" d="M216,528 H240"/>
+<path class="think" d="M416,528 H440"/>
+<path class="think" d="M616,528 H640"/>
+<path class="think" d="M816,528 H840"/>
+<path class="think" d="M1016,528 H1040"/>
+<path class="loop" d="M1128,570 V590 H128 V576"/>
+
+<text class="el" x="640" y="612" text-anchor="middle">Loops ≤ ~4 variants, then stops &amp; reports &#160;·&#160; the metric guides judgment — it is never minimized over free knobs (no magic constants)</text>
+
+<!-- ============ 4. PIPELINE ============ -->
+<text class="h2" x="32" y="656">④ THE DETERMINISTIC PIPELINE — one "run" turns the idea into reproducible numbers</text>
+<text class="el" x="1248" y="656" text-anchor="end">driven by step 4 · results feed step 5</text>
+
+<rect x="32" y="672" width="1216" height="102" rx="10" fill="none" stroke="var(--log-s)" stroke-width="1.6" stroke-dasharray="7 5"/>
+
+<rect x="48"   y="698" width="160" height="52" rx="7" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.2"/>
+<text class="bt" x="128" y="720" text-anchor="middle" style="font-size:11.5px">ERA5</text>
+<text class="bm" x="128" y="737" text-anchor="middle">weather input</text>
+
+<rect x="253"  y="698" width="160" height="52" rx="7" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.2"/>
+<text class="bt mono" x="333" y="719" text-anchor="middle" style="font-size:11px">crtm_input.nc</text>
+<text class="bm" x="333" y="737" text-anchor="middle">atmosphere profiles</text>
+
+<rect x="458"  y="698" width="160" height="52" rx="7" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.2"/>
+<text class="bt" x="538" y="720" text-anchor="middle" style="font-size:11.5px">Brightness temps</text>
+<text class="bm" x="538" y="737" text-anchor="middle">one per channel</text>
+
+<rect x="663"  y="698" width="160" height="52" rx="7" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.2"/>
+<text class="bt" x="743" y="720" text-anchor="middle" style="font-size:11.5px">Simulated</text>
+<text class="bm" x="743" y="737" text-anchor="middle">GOES-19 image</text>
+
+<rect x="868"  y="698" width="160" height="52" rx="7" fill="var(--key-f)" stroke="var(--key-s)" stroke-width="1.6"/>
+<text class="bt" x="948" y="720" text-anchor="middle" style="font-size:11.5px">REAL GOES-19</text>
+<text class="bm" x="948" y="737" text-anchor="middle">image · fixed target</text>
+
+<rect x="1073" y="698" width="160" height="52" rx="7" fill="var(--log-f)" stroke="var(--log-s)" stroke-width="1.6"/>
+<text class="bt" x="1153" y="720" text-anchor="middle" style="font-size:11.5px">Metrics</text>
+<text class="bm mono" x="1153" y="737" text-anchor="middle">eval.json</text>
+
+<path class="flow" d="M208,724 H253"/>
+<text class="el" x="230" y="692" text-anchor="middle">inputs-cli</text>
+<path class="flow" d="M413,724 H458"/>
+<text class="el" x="435" y="692" text-anchor="middle">CRTM driver</text>
+<path class="flow" d="M618,724 H663"/>
+<text class="el" x="640" y="692" text-anchor="middle">ashlib</text>
+<path class="edge2" d="M823,724 H868"/>
+<text class="el" x="845" y="692" text-anchor="middle">compare</text>
+<path class="flow" d="M1028,724 H1073"/>
+<text class="el" x="1050" y="692" text-anchor="middle">score</text>
+
+<text class="it" x="48" y="766">Deterministic: fixed inputs + pinned code + a hashed lookup-table → the same numbers every time. The agent tweaks only the "+ scheme" step.</text>
+<text class="el" x="32" y="794">Every run is reproducible from two git commits (this repo + the pinned submodule) + the hashed lookup-table — the "two-SHA + LUT" triple saved in <tspan class="mono">provenance.json</tspan>.</text>
+
+<!-- ============ 5. SEAM ============ -->
+<text class="h2" x="32" y="834">⑤ THE SEAM — how the agent changes the physics, and the guardrails that bound it</text>
+
+<rect x="32" y="850" width="300" height="112" rx="8" fill="var(--code-f)" stroke="var(--code-s)" stroke-width="1.4"/>
+<text class="bt" x="48" y="876">This repo (lab notebook)</text>
+<text class="bd" x="48" y="900">new particle-size schemes as</text>
+<text class="bd" x="48" y="918">plugins, diagnostics, the log —</text>
+<text class="bm" x="48" y="938">the agent writes here freely.</text>
+
+<path class="edge" d="M332,906 H392"/>
+<text class="el" x="362" y="896" text-anchor="middle">plugs into</text>
+<text class="el" x="362" y="924" text-anchor="middle">the seam</text>
+
+<rect x="396" y="850" width="384" height="112" rx="8" fill="var(--data-f)" stroke="var(--data-s)" stroke-width="1.4"/>
+<text class="bt" x="412" y="876">crtm-experiments</text>
+<rect x="648" y="858" width="120" height="17" rx="8.5" fill="var(--data-s)"/>
+<text class="pill" x="708" y="870.5" style="fill:var(--bg)">PINNED SUBMODULE</text>
+<text class="bd" x="412" y="900">the physics + driver code,</text>
+<text class="bd" x="412" y="918">frozen at one exact commit.</text>
+<text class="bm" x="412" y="938">Additive capability edits go on a side branch only.</text>
+
+<rect x="812" y="842" width="436" height="130" rx="8" fill="var(--think-f)" stroke="var(--think-s)" stroke-width="2.4"/>
+<text class="bt" x="828" y="868">STOP — ask the human first before you:</text>
+<text class="bd" x="828" y="892">· change a pipeline default (overlap · lookup-table · sensor)</text>
+<text class="bd" x="828" y="914">· re-pin the submodule or touch "main"</text>
+<text class="bd" x="828" y="936">· introduce a tuned constant to move the metric</text>
+<text class="it" x="828" y="958">Adding a capability is fine — changing what a run means is the human's call.</text>
+
+<text class="el" x="32" y="994">Append-only record — every run is saved to <tspan class="mono">runs/&lt;label&gt;/</tspan> (eval.json · config.nml · provenance.json) and appended to LOG.md. History is never rewritten.</text>
+
+</svg>
