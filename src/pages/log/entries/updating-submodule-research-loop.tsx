@@ -51,7 +51,7 @@ export function Body() {
                 merging main onto the hooks branch and cleaning up a few conflicts.
             </p>
             <p className="text">
-                TThis works reasonably well, but I do not know if this is the best approach. It's human in the loop
+                This works reasonably well, but I do not know if this is the best approach. It's human in the loop
                 by design as it forces me to be very intentional on when I bump the main simulation code version
                 used in the research loop. All hashes are tracked so that research loop results are always versioned,
                 but I am sure there are subtle ways that this could fail.

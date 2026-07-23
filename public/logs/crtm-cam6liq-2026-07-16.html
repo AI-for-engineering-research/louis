@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Log &mdash; CAM6 Liquid Effective Radius — Implementation &amp; Testing (2026-07-16)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #0f1117; color: #e2e8f0; line-height: 1.6; }
+    .header { background: #1a1d2e; border-bottom: 1px solid #2d3748; padding: 1.5rem 2rem; }
+    .header h1 { font-size: 1.4rem; color: #90cdf4; }
+    .header .meta { font-size: 0.85rem; color: #718096; margin-top: 0.3rem; }
+    .container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+    .turn { margin-bottom: 1.5rem; }
+    .turn-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+    .role-badge { font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .role-badge.user { background: #2b4c7e; color: #90cdf4; }
+    .role-badge.assistant { background: #2d3b2d; color: #68d391; }
+    .turn-time { font-size: 0.75rem; color: #4a5568; }
+    .turn-body { background: #1a1d2e; border: 1px solid #2d3748; border-radius: 8px; padding: 1rem 1.25rem; }
+    .turn-body.user { border-left: 3px solid #4299e1; }
+    .turn-body.assistant { border-left: 3px solid #48bb78; }
+    .turn-body p { margin-bottom: 0.6rem; }
+    .turn-body p:last-child { margin-bottom: 0; }
+    .turn-body ul, .turn-body ol { margin: 0.5rem 0 0.5rem 1.5rem; }
+    .turn-body li { margin-bottom: 0.25rem; }
+    .turn-body pre { background: #0a0c14; border: 1px solid #2d3748; border-radius: 6px; padding: 0.75rem 1rem; overflow-x: auto; font-size: 0.82rem; margin: 0.5rem 0; line-height: 1.35; }
+    .turn-body code { font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.85em; }
+    .turn-body pre code { font-size: 0.82rem; }
+    .turn-body :not(pre) > code { background: #0a0c14; border: 1px solid #2d3748; padding: 0.1em 0.4em; border-radius: 3px; }
+    .turn-body strong { color: #f6e05e; }
+    .turn-body em { color: #cbd5e0; }
+    .turn-body h2 { font-size: 1.05rem; color: #90cdf4; margin: 1.1rem 0 0.5rem; }
+    .turn-body h3 { font-size: 0.95rem; color: #90cdf4; margin: 0.9rem 0 0.4rem; }
+    .turn-body h2:first-child, .turn-body h3:first-child { margin-top: 0; }
+    .turn-body a { color: #63b3ed; }
+    .turn-body table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 0.85rem; display: block; overflow-x: auto; }
+    .turn-body th, .turn-body td { border: 1px solid #2d3748; padding: 0.35rem 0.6rem; text-align: left; vertical-align: top; }
+    .turn-body th { background: #0a0c14; color: #a0aec0; font-weight: 600; }
+    .attachment { font-size: 0.78rem; color: #718096; font-style: italic; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Chat Log &mdash; CAM6 Liquid Effective Radius — Implementation &amp; Testing</h1>
+    <div class="meta">Session date: 2026-07-16 &nbsp;&bull;&nbsp; Model: claude-opus-4-8 (1M context) &nbsp;&bull;&nbsp; Project: crtm-effr-exploration / optimization-color</div>
+  </div>
+  <div class="container">
+
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p><code>/autoresearch</code> — Read STATUS thread L (new lead) and corresponding log entry &quot;Synthesis — green-patch attribution:...&quot; Try the more complex scheme for Martin or other liquid cloud radius parametrizations (ccn based, land/ocean etc...) as suggested there</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now let me read the LOG entry for thread L (the green-patch attribution synthesis) and the related investigation.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me extract the IFS CY49R1 §2.4.2 text (eqs. 2.57–2.60) and check what the liquid-reff seam provides.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p><strong>Task 1</strong> — writing the offline direction-check diagnostic, and in parallel <strong>Task 2</strong> — verifying the CAM/Kiehl grounding:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Submodule is at the pin (detached HEAD, clean). Per protocol §6 I must work on <code>effr-exploration</code>:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>On the branch at the pin. Now the capability edit — reading the seam pieces I&#x27;ll extend:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me see the AtmData attribute definitions and the liquid-plugin tests:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now the capability edit. Let me check the pipeline ordering (surface info vs radius computation) and the HRRR liquid branch:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now the submodule edits. First <code>metdata.py</code>:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now <code>effr.py</code> — read <code>compute_liquid_reff</code> in full before editing:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now the two forwarding call sites — <code>ecmwf.py</code> and <code>hrrr.py</code>:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now a package test for the pass-through. Let me see how the ice/latitude threading was tested, to mirror:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>No package tests register plugins — the contract change breaks nothing in-package. Adding a focused pass-through test:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>72/72 green (suite grew since HANDOFF&#x27;s 48 note). Committing the capability edit in the submodule:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now the CAM3 physics module and both plugin adapters:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p><code>SnowCover</code> lives in a third <code>land</code> category — resolvable but never auto-written. <code>SnowWaterEquiv</code> belongs there too. Making the three edits:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Run the package tests and re-spot-check CAM with the SWE ramp:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Fixing the amended commit message to reflect the final contract (it&#x27;s the provenance record):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Run complete. Reading in the §5 order — images first:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The lime-green Canada patches have largely collapsed to olive/brown — visually much closer to the reference. Error maps, then the stratified eval:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Cloud_both improvements across the board — G in the offender bin (CTT 240–260) +1.00→+0.32, land G +1.50→+1.12, sea +0.61→+0.20, R and C14 essentially unchanged. Now the population-level read:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>green_N collapsed 1820 → <strong>584 px</strong> (−68 %), residual dG +2.9 → +1.8. Checking the r_e it actually produced and the remaining-patch structure:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Provenance pins submodule <code>7498915</code> clean. Now recording duties (§7). First the Index rows and the synthesis entry:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Now update STATUS.md thread L (forward-looking, my §7 duty):</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Session complete — committed as <code>8fe5372</code>. Here is the report.</p>
+        <p>---</p>
+        <p># Session report — thread L: liquid r_e parametrizations for the supercooled decks</p>
+        <h2>1. Tested</h2>
+        <table><tr><th>#</th><th>Variant</th><th>Grounding</th><th>Run</th></tr><tr><td>0a</td><td>Offline direction check of the CY49R1 N_d over this scene (<code>loop/diag_nd49.py</code>)</td><td>IFS CY49R1 Part IV §2.4.2a eqs. 2.57–2.60 (the synthesis&#x27;s &quot;verify its actual direction here&quot;)</td><td>none — read-only</td></tr><tr><td>0b</td><td>CAM snow-ramp fidelity check (SWE·10 vs pipeline <code>snow_cov</code>)</td><td>CAM <code>reltab</code> source, verified verbatim via the MPAS copy of <code>module_ra_cam_support.F</code></td><td>none — read-only</td></tr><tr><td>1</td><td><strong><code>MARTIN49</code></strong> — Martin r_e with the operational IFS wind/aerosol N_d (floors 40/120; Wood E_d/+RWC excluded, same rain-double-count rationale as MARTIN)</td><td><strong>Grounding:</strong> IFS CY49R1 eqs. 2.55–2.60, all constants from the doc</td><td><code>wyser_martin49_snow_incloud_maxran_k8_luttamu307</code></td></tr><tr><td>2</td><td><strong><code>CAM3LIQ</code></strong> — CAM3 <code>reltab</code> prescribed liquid r_e: 8 µm warm-continental → 14 µm via supercooling (<code>(273.16−T)·0.05</code>), snow-depth (<code>SWE·10</code>), and ocean-fraction ramps</td><td><strong>Grounding:</strong> Collins et al. 2004 (NCAR/TN-464+STR); values Kiehl et al. 1994/1998; formula verified against the CAM source</td><td><code>wyser_cam3liq_snow_incloud_maxran_k8_luttamu307</code></td></tr></table>
+        <p>Capability added (§6 protocol): per-profile <strong>surface context threaded to liquid-reff plugins</strong> — 10-m wind, snow cover, snow water equivalent, land cover — submodule commit <strong><code>7498915</code></strong> on <code>effr-exploration</code>, package tests <strong>72/72</strong>, <strong>not pinned</strong>.</p>
+        <h2>2. Findings, read physically</h2>
+        <ul><li><strong>MARTIN49 is the identity in disguise.</strong> At this scene&#x27;s median marine wind (5.7 m/s), eqs. 2.59–2.60 produce N_d ≈ 52 cm⁻³ — the CY41R2 constant 50 <em>is</em> the wind scheme&#x27;s typical output. Over the offenders the two wings cancel: calm snow-land coarsens ×1.3 (floor-bound at 120), the windy Labrador Sea <strong>finens</strong> ×0.9 (wind raises aerosol). green_N dG stays +2.9; every cloud_both metric within ±0.1 K of champion.</li><li><strong>The N_d route is blocked by ERA5&#x27;s LWC, not by N_d choice.</strong> At the decks&#x27; in-cloud LWC (~0.03 g/m³), reaching 14 µm needs N_d ≈ 3–6 cm⁻³ — below pristine-Arctic observations. Any r_e ∝ (LWC/N_d)^⅓ scheme inherits the LWC bias.</li><li><strong>CAM3LIQ collapses thread L.</strong> All three ramps saturate on exactly the offending population (obs CTT ~254 K alone ⇒ 13.75 µm): mismatch mask <strong>1820→584 px (−68 %)</strong>, residual dG <strong>+2.9→+1.8</strong>; visually the Canada lime swaths now render olive/brown like the reference. In cloud_both: G +0.76→<strong>+0.27</strong> (MAE 2.07→<strong>1.82</strong>), in the offender CTT bin (240–260 K) +1.00→+0.32, land +1.50→+1.12 (≈0.4 K of the &quot;land 8.5 µm emissivity&quot; green was liquid size), sea +0.61→+0.20 — at <strong>unchanged R (0.88→0.89), C14 (+5.31→+5.24), WV/CO₂ bands</strong>. Brown-cirrus control untouched (dG −0.9). RGB <strong>0.1265</strong> — best of all runs, including the non-promotable MH97 0.1290.</li><li><strong>Slight overshoot where G was already fine</strong> (Mayer-2024 direction, liquid edition): coldest-bin G bias −0.28→−0.51, snow-surface +0.29→−0.48 (both MAEs still improve). 14 µm is the <em>low</em> edge of the CONSTLIQ zero-crossing (14–23 µm).</li></ul>
+        <h2>3. Ruled IN / ruled OUT</h2>
+        <ul><li><strong>OUT: CY49R1 wind/aerosol N_d as the thread-L lever</strong> (null run + physical closure above). Synthesis candidate (a) closed.</li><li><strong>OUT: any N_d-based liquid r_e for these decks at ERA5 LWC</strong> (needs unphysical N_d).</li><li><strong>IN: the liquid-SIZE attribution of thread L</strong> — an independent scheme produced the same collapse the CONSTLIQ bracket predicted.</li><li><strong>IN: prescribed/regime-based liquid r_e as the working lever class</strong> — immune to the ERA5 LWC bias by construction.</li></ul>
+        <h2>4. Proposed STATUS/HANDOFF deltas (human applies)</h2>
+        <ul><li><strong>Promote <code>CAM3LIQ</code> into the champion frame?</strong> My read: yes — best promotable RGB, resolves the visual complaint, no R/C14 cost — but it trades Martin&#x27;s LWC-consistency for a prescribed climatology; that framing call is yours. If promoted: HANDOFF §7 ranking + STATUS &quot;current best&quot; update, and a k=1 milestone to confirm (human-authorized; ~1 h driver).</li><li><strong>Pin decision:</strong> submodule <code>7498915</code> (seam surface-context) — merge-forward/bump + retag when you&#x27;re ready.</li><li>STATUS thread L already updated by me (resolution + open residuals); consider moving the &quot;green high-bias&quot; Settled bullet&#x27;s liquid share to cite this session.</li></ul>
+        <h2>5. Ranked next directions</h2>
+        <ol><li><strong>Decide CAM3LIQ promotion + k=1 milestone</strong> (cheapest decisive step; also re-baselines the ranking table with the liquid leg swapped).</li><li><strong>The residual 584 px / +1.8 dG:</strong> truth lies between 14 µm (CAM) and 30 µm (CONSTLIQ overshoot). Only worth a run if a <em>published</em> coarser high-latitude-deck r_e exists (e.g. satellite r_e climatologies for supercooled stratus — worth a literature pass before any run).</li><li><strong>Thread L candidate (c), untouched: the ice/liquid phase partition of the decks (mmr knob)</strong> — GOES may see icier tops than ERA5&#x27;s liquid-heavy partition; would also move C14, unlike r_e.</li><li><strong>Thread D (ice r_e structure)</strong> and <strong>thread S (Ren snow slab)</strong> stand as before.</li></ol>
+        <h2>6. How I might be wrong</h2>
+        <ul><li><strong>The CY49R1 floors:</strong> the doc&#x27;s 40/120 &quot;low-wind values&quot; don&#x27;t match the raw quadratics at Ws=0 (~36/~101); I implemented them as floors. If IFS instead evaluates differently, MARTIN49&#x27;s land wing shifts slightly — but the null verdict is robust (the sea wing dominates the offenders&#x27; liquid).</li><li><strong>CAM deviation:</strong> local <code>land_cov</code> replaces CAM&#x27;s spatially <em>smoothed</em> <code>landm</code>; coastal-gradient pixels may differ from true CAM. The snow ramp is faithful (ERA5 <code>sd</code> = CAM&#x27;s SWE) — I caught and avoided the <code>snow_cov</code> shortcut that would have overstated it (median weight 1.0 vs faithful 0.19).</li><li><strong>Population sizes:</strong> the CAM3LIQ residual green_N is n=584 (medians thinner); the coldest-bin/snow-surface overshoot reads rest on healthy n but small biases (&lt;0.5 K).</li><li><strong>C7 (3.9 µm) moved and was not read</strong> (day-contaminated scene edge; night-only reliable). If you care about SW products, that stratum deserves a night-scene check before promotion.</li><li><strong>RGB is the saturating secondary</strong> — but the promotion case here rests on the primary (cloud_both G per CTT bin), which moved the same way.</li></ul>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>I want to dig into the CAM parametrization more. Can you pull CAM6 parametrization of liquid particle effective radius? Highlight the differences with CAM3 (source the literature), and if feasible for the data at hand implement and test it.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Good direction — this digs at exactly the question my report flagged (prescribed climatology vs process scheme). Let me set up and pull the primary sources.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Doxygen doesn&#x27;t carry implementations. Let me curl the raw sources and grep precisely:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>The PDF was saved locally — extract with pypdf:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Spot-check the module against hand-computed values, including the λ-bound edge cases:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Scene-level as predicted: essentially champion-like, RGB slightly worse (0.1313). Reading in §5 order — image, strata, population:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Committed as <code>135378c</code>. Here is the sourced comparison and the test result.</p>
+        <p>---</p>
+        <p># CAM6 liquid r_e vs CAM3 — what changed, and what it does here</p>
+        <h2>The CAM6 parametrization (verified verbatim from the CESM2.1 release)</h2>
+        <p>CAM6 has <strong>no prescribed liquid r_e at all</strong>. Its r_e is a <em>moment diagnostic</em> of the MG2 two-moment microphysics (<a href="https://journals.ametsoc.org/view/journals/clim/28/3/jcli-d-14-00102.1.xml" target="_blank" rel="noopener">Gettelman &amp; Morrison 2015</a>; PSD framework <a href="https://journals.ametsoc.org/jcli/article/21/15/3642/32043" target="_blank" rel="noopener">Morrison &amp; Gettelman 2008</a>), which assumes a gamma PSD <code>n(D) = N₀ Dᵘ e^(−λD)</code> over the <strong>prognostic</strong> in-cloud mass q_c and droplet number N_c. From the release code (<a href="https://github.com/ESCOMP/CAM" target="_blank" rel="noopener">ESCOMP/CAM <code>cam_cesm2_1_rel</code></a>, <code>micro_mg_utils.F90</code> + <code>micro_mg2_0.F90</code>):</p>
+        <pre>! Get pgam from fit to observations of martin et al. 1994   &lt;- stale comment
+pgam = 1.0_r8 - 0.7_r8 * exp(-0.008_r8*1.e-6_r8*ncic*rho)   ! eta(Nc)
+pgam = 1._r8/(pgam**2) - 1._r8                              ! mu = 1/eta^2 - 1
+pgam = max(pgam, 2._r8)
+...
+props_loc%lambda_bounds = (pgam+1._r8)*1._r8/[50.e-6_r8, 2.e-6_r8]  ! mean diam 2-50 um
+...
+effc(i,k) = (pgam(i,k)+3._r8)/lamc(i,k)/2._r8*1.e6_r8       ! r_e = (mu+3)/(2*lambda)</pre>
+        <p>with <code>qcic = min(qc/lcldm, 5e-3)</code>, and N_c supplied by MAM4 aerosol activation (Abdul-Razzak &amp; Ghan 2000). The dispersion is the <a href="https://journals.ametsoc.org/view/journals/clim/16/21/1520-0442_2003_016_3476_sotfia_2.0.co_2.xml" target="_blank" rel="noopener">Rotstayn &amp; Liu (2003)</a> ε–N relation in its <strong>upper-bound form</strong> (their λ ∈ {0.001, 0.003, 0.008}; CAM6 uses 0.008 — confirmed via <a href="https://www.scielo.org.mx/scielo.php?script=sci_arttext&amp;pid=S0187-62362007000300002" target="_blank" rel="noopener">Zhao et al., Atmósfera 2007</a> which tabulates the three RL03 coefficients). The code comment still says &quot;martin et al. 1994&quot;; the successor <a href="https://github.com/ESCOMP/PUMAS/blob/master/micro_mg_utils.F90" target="_blank" rel="noopener">ESCOMP/PUMAS</a> repo corrects it: <em>&quot;fit Rotstayn and Liu 2003 (changed from Martin 1994 for CAM6)&quot;</em>.</p>
+        <h2>Differences vs CAM3, generation by generation</h2>
+        <table><tr><th></th><th><strong>CAM3/CAM4</strong> (<code>reltab</code>)</th><th><strong>CAM5</strong> (MG1)</th><th><strong>CAM6</strong> (MG2)</th></tr><tr><td>Nature</td><td><strong>Prescribed</strong> from regime</td><td>Diagnosed from gamma PSD</td><td>Diagnosed from gamma PSD</td></tr><tr><td>Inputs</td><td>layer T, snow depth, land fraction</td><td>prognostic q_c, <strong>N_c</strong></td><td>prognostic q_c, <strong>N_c</strong> (+ prognostic precip)</td></tr><tr><td>Values</td><td>8 µm warm land → 14 µm maritime / supercooled (T≤253 K) / snow-covered (SWE≥10 cm)</td><td>r_e = (μ+3)/2λ</td><td>same formula</td></tr><tr><td>Dispersion μ(N_c)</td><td>— (implicit in the 8/14 constants)</td><td>Martin 1994 linear fit: η = 0.0005714·N_c + 0.2714, μ∈[2,15] (<code>micro_mg1_0.F90:1730-33</code>)</td><td><strong>RL03 upper-bound</strong>: η = 1−0.7e^(−0.008·N_c), μ≥2 only</td></tr><tr><td>Bounds</td><td>8–14 µm by construction</td><td>mean diam 2–50 µm</td><td>mean diam 2–50 µm (⇒ r_e ~1.7–42 µm at μ=2), q_cic ≤ 5 g/kg</td></tr><tr><td>N_c source</td><td>—</td><td>ARG activation on MAM3</td><td>ARG activation on MAM4; documented constant fallback <code>nccons</code>, <code>ncnst=100e6 m⁻³</code> (<code>micro_mg_cam.F90:135</code>)</td></tr><tr><td>LWC dependence</td><td><strong>none</strong></td><td>r_e ∝ (LWC/N_c)^⅓</td><td>r_e ∝ (LWC/N_c)^⅓</td></tr></table>
+        <p>Two useful analytic facts: at equal (LWC, N_c) the RL03 dispersion makes CAM6&#x27;s r_e <strong>~13 % coarser</strong> than the Martin-k relation; and at the nccons default (100 cm⁻³), η=0.686 ⇒ <strong>μ clips to 2 everywhere</strong>, so operational-fallback CAM6 is effectively a single-shape scheme.</p>
+        <h2>Feasibility and test</h2>
+        <p>ERA5 carries no prognostic N_c, so full CAM6 (aerosol-activated N_c) is <strong>not implementable</strong> from this data — that&#x27;s a model-system property, not a borrowable knob. What <em>is</em> faithful: MG2&#x27;s own documented constant-number mode, which I implemented as <strong><code>CAM6LIQ</code></strong> (<code>plugins/cam6_liquid.py</code>, every constant from the release code, prediction pre-registered in the docstring) and ran in the champion frame:</p>
+        <table><tr><th>run (cloud_both)</th><th>C14</th><th>R</th><th>G</th><th>RGB</th><th>green_N dG (n)</th><th>mass-wt liq r_e</th></tr><tr><td>champion (MARTIN 50/300)</td><td>+5.31/13.66</td><td>+0.05/0.88</td><td>+0.76/2.07</td><td>0.1308</td><td>+2.9 (1820)</td><td>6.1 µm</td></tr><tr><td>MARTIN49 (wind N_d)</td><td>+5.29/13.66</td><td>+0.06/0.88</td><td>+0.75/2.05</td><td>0.1307</td><td>+2.9 (1832)</td><td>6.8 µm</td></tr><tr><td><strong>CAM6LIQ (nccons 100)</strong></td><td>+5.28/13.65</td><td>+0.07/0.89</td><td>+0.70/2.03</td><td>0.1313</td><td><strong>+2.8 (1684)</strong></td><td>7.7 µm</td></tr><tr><td>CAM3LIQ (reltab)</td><td>+5.24/13.66</td><td>+0.10/0.89</td><td><strong>+0.27/1.82</strong></td><td><strong>0.1265</strong></td><td><strong>+1.8 (584)</strong></td><td>14.0 µm</td></tr></table>
+        <p><strong>Verdict: champion-adjacent null.</strong> The green patches persist (image confirms). One instructive nuance: CAM6LIQ actually <em>coarsens</em> the offenders&#x27; mass-wt r_e (6.1→7.7 µm — the land wing moves 300→100 cm⁻³) yet dG barely moves — reinforcing that this population needs ~14 µm, which no (LWC/N_c)^⅓ law reaches at ERA5&#x27;s deck LWC (would need N_c ≈ 3–6 cm⁻³).</p>
+        <p><strong>The punchline for this loop:</strong> the CAM lineage moved <em>away</em> from the thing that works here. CAM3&#x27;s prescribed table fixes the patches precisely because it ignores LWC; CAM5/6&#x27;s more physical PSD-diagnostic inherits ERA5&#x27;s low deck LWC and lands where Martin does, regardless of dispersion generation. So &quot;upgrade CAM3→CAM6&quot; is a downgrade for this scene — unless one day the loop gets a defensible N_c <em>and</em> LWC source.</p>
+        <p>Recorded: run + two LOG synths (<code>## Addendum — the CAM lineage</code>), STATUS thread L, HANDOFF §5 inventory; committed <code>135378c</code>. Submodule still at <code>7498915</code> on <code>effr-exploration</code>, <strong>unpinned</strong> — the pin bump remains your call, now covering all four liquid plugins.</p>
+        <p><strong>How I might be wrong:</strong> the 0.008-vs-0.003 RL03 coefficient rests on the code + a secondary source (the RL03 paper itself is paywalled); μ=2-everywhere makes CAM6LIQ insensitive to that choice here, but the &quot;upper-bound&quot; attribution in my write-up should be treated as code-authoritative rather than paper-verified. And <code>nccons=100</code> is CAM6&#x27;s <em>fallback</em>, not its climate — a real CAM6 Arctic-winter N_c would be lower (cleaner air), pushing r_e coarser than my test, though still nowhere near 14 µm at this LWC.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>Can you make a plot showing the different regimes of the reff predicted by cam3 as a function of temperature, snow depth and ocean over? Probably 5 2D histograms (one for a set value of ocean cover)</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Final figure — clean render, no label collisions:</p>
+        <p>![CAM3 reltab regimes](cam3_reltab_regimes.png)</p>
+        <p><strong>How to read it</strong> (all values computed from the repo&#x27;s <code>plugins/cam3_liquid.py</code>, i.e. exactly what <code>CAM3LIQ</code> ran):</p>
+        <ul><li><strong>Panel 1 (pure land)</strong> is the only panel with the full structure: the 8 µm warm-polluted-continental corner (bottom-right), the <strong>supercooling ramp</strong> in T (8→14 µm between 273.16 K and 253.16 K — dotted verticals), and the <strong>snow-depth ramp</strong> in SWE (toward 14 µm, saturating at 10 cm w.e. — dotted horizontal). The two ramps compose: even snow-free land at 253 K is already fully maritime-like, and warm land under a deep snowpack likewise.</li><li><strong>Moving right</strong>, the ocean-fraction ramp <code>rel += (14−rel)·(1−landm)</code> compresses the whole surface toward 14 µm — at 50 % ocean cover the warmest, snow-free corner is already ≈11 µm, and at <strong>100 % ocean the panel is uniformly 14 µm</strong> (the prescribed maritime value; T and snow become irrelevant).</li><li>The thread-L decks (obs CTT ~254 K, over water or snow-covered Quebec) sit in the dark upper/left region of <em>every</em> relevant panel — that&#x27;s the visual explanation of why all three ramps saturate to 14 µm for exactly that population, landing in the 14–23 µm zero-crossing the CONSTLIQ bracket identified.</li></ul>
+        <p>The figure and its script live in the session scratchpad (<code>cam3_reltab_regimes.png</code> / <code>plot_cam3_regimes.py</code>) — uncommitted, per the repo&#x27;s no-PNGs policy. If you want it reproducible from the repo, I can move the script into <code>loop/</code> (e.g. <code>loop/plot_cam3_regimes.py</code>) and commit just the script — say the word.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>Where did you save the png</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Both files are in the session scratchpad (a temp directory, outside the repo):</p>
+        <ul><li><strong>PNG:</strong> <code>/tmp/claude-1000/-home-louis-code-crtm-effr-exploration/23dad51d-c392-45ae-bfe9-b5e1e03cc99c/scratchpad/cam3_reltab_regimes.png</code></li><li><strong>Script:</strong> same directory, <code>plot_cam3_regimes.py</code></li></ul>
+        <p>Note that <code>/tmp</code> is wiped on reboot (and this scratchpad is session-specific). If you want to keep it, I can copy the PNG somewhere durable (e.g. <code>~/</code>) and/or commit the <em>script</em> into <code>loop/</code> so the figure is regenerable from the repo — the PNG itself stays uncommitted per the repo policy.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>Commit the script into loop/</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Committed as <code>f603ebf</code>. The script is now <code>loop/plot_cam3_regimes.py</code>, adapted for the repo:</p>
+        <ul><li>paths are repo-relative (<code>plugins/</code> found via the script&#x27;s own location, matching the other <code>loop/</code> scripts),</li><li>the PNG writes to <code>loop/cam3_reltab_regimes.png</code>, which the global <code>*.png</code> ignore rule keeps out of git (verified — only the <code>.py</code> was staged),</li><li>usage line in the docstring: <code>pixi run --manifest-path crtm-experiments/crtm-inputs --environment test python loop/plot_cam3_regimes.py</code></li></ul>
+        <p>I verified it renders identically from its new location before committing.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>With the new cam3 run, re-run a full analysis of where the dominant errors are (land type, which type of cloud / clear, etc...)</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>A read-only analysis session on <code>wyser_cam3liq_snow_incloud_maxran_k8_luttamu307</code> — no new runs needed; I&#x27;ll work through the eval strata, then the binned diagnostics, and build a ranked error budget. First the full eval table and the diagnostic interfaces:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Structure known. Building the ranked error-budget script:</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Committed as <code>5cda490</code> (LOG invest entry + Index row; no new runs spent). Here&#x27;s the full picture.</p>
+        <p># Error budget of the CAM3LIQ config — where the errors live now</p>
+        <p><strong>Method:</strong> error mass = share of Σ(n·MAE) across cloud-state × surface strata from <code>eval.json</code>; biases read per CTT bin; each attribution backed by a binned diagnostic (<code>diag_coldtops</code>, <code>diag_green</code>, <code>diag_splitwindow</code>, <code>diag_intersection</code>), with per-stratum deltas vs champion to isolate what the liquid swap moved.</p>
+        <h2>Ranked, dominant first</h2>
+        <p><strong>1. Cold-cloud under-opacity (ERA5 ice amount) — ~half of all BT error, liquid-invariant.</strong> <code>cloud_both</code> sea+land hold 51 % of scene C14 error mass; CTT-binned C14 bias is <strong>+28.7 K (&lt;220 K)</strong> / +10.8 (220–240) — identical to champion to ±0.01. The decomposition on this config reproduces the settled result: <code>dHeight −8.8</code> (model tops are <em>colder</em> than obs — not a height error), <code>dTransp +37.8</code> (emission from below = under-opacity); the opaque∧overcast cores match to −2.3 K, while thin (τ&lt;3: +39.5) and scattered (TCC&lt;0.7: +54) columns carry the bias. Two &quot;other&quot; signals are the same root seen elsewhere: thin-cloud green (dG +2.24 where dC14 +15.5) and dCO₂ −6.7/−2.4 in cold bins. Settled #1b — needs ice mass, out of scope.</p>
+        <p><strong>2. Placement / representativeness strata — input data, not microphysics.</strong> <code>sim_only</code> sea (n=36 710) is 28.5 % of C14 error mass (−3.2 K; warm/low marine cloud the GOES cold proxy doesn&#x27;t count) and — notable — <strong>46 % of the scene&#x27;s R error mass</strong> (bias +0.72), making it the largest single R reservoir; it&#x27;s placement-confounded, not a particle lever. <code>ref_only</code> land (n=1303, pure misses) has the biggest raw biases anywhere: C14 +14.3, C15 +15.8. The colour verdicts are placement-clean: on the sim∩GOES intersection R +0.13/0.90, G +0.30/1.83 ≈ the ref-cloud values.</p>
+        <p><strong>3. Ice r_e structure (thread D) — the biggest <em>in-scope</em> colour residual now.</strong> Cold-cirrus R: sim −1.47 vs ref −1.16 (−0.31 too negative — Wyser&#x27;s 21 µm cold tops vs the wanted ~36 µm), warm/mid bins overshoot (+0.25/+0.59; the coarser liquid nudged the warm bin by just +0.06). The R cancellation structure survives the liquid swap untouched — the lever remains the ice r_e&#x27;s IWC/T structure.</p>
+        <p><strong>4. Land-cloud green +1.2 K</strong> (ice-dom over land +1.21) — the residual 8.5 µm emissivity-DB share (bracketed IGBP↔NPOESS ≈0.8 K) plus remainder; now the largest surviving G bias in any big stratum. Needs a spectral atlas (CAMEL/UWiremis).</p>
+        <p><strong>5. CAM3LIQ&#x27;s own residuals (new, modest).</strong> (a) Liquid-dominated decks still +1.3…+1.6 dG — 14 µm is the <em>low</em> edge of the 14–23 µm zero-crossing; truth nearer ~20 µm. (b) A coarse-side overshoot over snow surfaces: cloud/snow dG flipped +0.29→−0.48, <strong>independently corroborated at 3.9 µm</strong> (SW cloud/snow −0.50→+1.15; night-valid in this scene) — both signs consistent with slightly-too-coarse liquid where G was already fine. (c) Thick-ice G stays ~−1.0 (ice/ERA5 side, not liquid).</p>
+        <p><strong>6. Clear-land green −1.20</strong> (IGBP near-grey 8.5 µm DB, settled bracket) — 7.5 % of G error mass, relatively more visible now that cloud G shrank.</p>
+        <h2>Bottom line</h2>
+        <p>After CAM3LIQ the colour target is the healthiest it&#x27;s been — cloud_both <strong>G +0.27/1.82, R +0.10/0.89</strong>, C14 +5.24/13.66 — and the in-scope colour error has consolidated into two things: the <strong>ice r_e structure</strong> (thread D) and the <strong>land 8.5 µm emissivity</strong> limit. The two much larger BT reservoirs (ice amount, placement) are input-data limits the loop deliberately doesn&#x27;t tune. The snow-surface overshoot (5b) is the one genuinely new lead from this analysis: two bands agree CAM3&#x27;s 14 µm is a touch coarse for snow-surface decks while the liquid-dominated decks want coarser than 14 — a tension a single prescribed table can&#x27;t close, worth remembering when judging promotion.</p>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

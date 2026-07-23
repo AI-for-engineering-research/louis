@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Log &mdash; CAM3 Liquid Effective Radius &amp; the Florida Green (2026-07-22)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #0f1117; color: #e2e8f0; line-height: 1.6; }
+    .header { background: #1a1d2e; border-bottom: 1px solid #2d3748; padding: 1.5rem 2rem; }
+    .header h1 { font-size: 1.4rem; color: #90cdf4; }
+    .header .meta { font-size: 0.85rem; color: #718096; margin-top: 0.3rem; }
+    .container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+    .turn { margin-bottom: 1.5rem; }
+    .turn-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+    .role-badge { font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .role-badge.user { background: #2b4c7e; color: #90cdf4; }
+    .role-badge.assistant { background: #2d3b2d; color: #68d391; }
+    .turn-time { font-size: 0.75rem; color: #4a5568; }
+    .turn-body { background: #1a1d2e; border: 1px solid #2d3748; border-radius: 8px; padding: 1rem 1.25rem; }
+    .turn-body.user { border-left: 3px solid #4299e1; }
+    .turn-body.assistant { border-left: 3px solid #48bb78; }
+    .turn-body p { margin-bottom: 0.6rem; }
+    .turn-body p:last-child { margin-bottom: 0; }
+    .turn-body ul, .turn-body ol { margin: 0.5rem 0 0.5rem 1.5rem; }
+    .turn-body li { margin-bottom: 0.25rem; }
+    .turn-body pre { background: #0a0c14; border: 1px solid #2d3748; border-radius: 6px; padding: 0.75rem 1rem; overflow-x: auto; font-size: 0.82rem; margin: 0.5rem 0; line-height: 1.35; }
+    .turn-body code { font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.85em; }
+    .turn-body pre code { font-size: 0.82rem; }
+    .turn-body :not(pre) > code { background: #0a0c14; border: 1px solid #2d3748; padding: 0.1em 0.4em; border-radius: 3px; }
+    .turn-body strong { color: #f6e05e; }
+    .turn-body em { color: #cbd5e0; }
+    .turn-body h2 { font-size: 1.05rem; color: #90cdf4; margin: 1.1rem 0 0.5rem; }
+    .turn-body h3 { font-size: 0.95rem; color: #90cdf4; margin: 0.9rem 0 0.4rem; }
+    .turn-body h2:first-child, .turn-body h3:first-child { margin-top: 0; }
+    .turn-body a { color: #63b3ed; }
+    .turn-body table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 0.85rem; display: block; overflow-x: auto; }
+    .turn-body th, .turn-body td { border: 1px solid #2d3748; padding: 0.35rem 0.6rem; text-align: left; vertical-align: top; }
+    .turn-body th { background: #0a0c14; color: #a0aec0; font-weight: 600; }
+    .attachment { font-size: 0.78rem; color: #718096; font-style: italic; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Chat Log &mdash; CAM3 Liquid Effective Radius &amp; the Florida Green</h1>
+    <div class="meta">Session date: 2026-07-22 &nbsp;&bull;&nbsp; Model: claude-opus-4-8 (1M context) &nbsp;&bull;&nbsp; Project: crtm-effr-exploration / optimization-color</div>
+  </div>
+  <div class="container">
+
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>Let&#x27;s discuss the liquid parametrization scheme. The best performing is CAM3 which uses values ranging from 8 to 14um depending on land/ocean/snow cover and layer temperature. Looking at places like Florida on the ash image [Image #1], it is still too green. This could just be a limitation of the scheme (ocean air blown over Florida), the scheme assigns the land radius (small, due to many ccn)  even though the air is mostly oceanic (few ccn, larger radius). Is that a reasonable interpretation given this scheme is independent of LWC. Also, this scheme is based on numbers from 2004. Pollution levels esp. over the US have dropped, would it make sense to use teh &quot;clean&quot; radius everywhere instead? Discuss and critize this</p>
+        <div class="attachment">[image pasted inline]</div>
+        <div class="attachment">[image attached — /home/louis/code/crtm-effr-exploration/loop/runs/wyser_cam3liq_snow_incloud_maxran_k8_luttamu307/compare.png]</div>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>I&#x27;ll ground this in what&#x27;s actually implemented and what the last error budget found before opining.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Good — that&#x27;s a real finding. Let me test the decisive question for &quot;clean everywhere&quot;: what dG do warm <em>continental</em> liquid clouds already have at 8 µm?</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>I ran the numbers on your Florida box before answering, because the interpretation turns on which pixels you&#x27;re actually looking at.</p>
+        <h2>What&#x27;s actually there (box: 24–33°N, 88–77°W, CAM3LIQ run)</h2>
+        <p>409 green-mismatch pixels in the box. They split into two populations that need completely different explanations:</p>
+        <table><tr><th></th><th>n</th><th>dG</th><th>r_e assigned</th><th>land</th><th>ref C13</th></tr><tr><td><strong>sim_only</strong> (GOES sees no cold cloud)</td><td>363 (89%)</td><td>+2.52</td><td><strong>8.0 µm</strong></td><td>1.00</td><td>280.9 K</td></tr><tr><td><strong>cloud_both</strong></td><td>46 (11%)</td><td>+4.76</td><td><strong>14.0 µm</strong></td><td>0.00</td><td>267.3 K</td></tr></table>
+        <p>CAM3LIQ already cut the box&#x27;s mismatch from 730 px → 409 vs the Martin champion, and box <code>cloud_both</code> dG from +1.74 → +0.79. So the residual you&#x27;re looking at is what survived.</p>
+        <h2>Your interpretation: right mechanism, wrong dominant cause</h2>
+        <p>The land pixels <em>are</em> at 8 µm, and coarsening them <em>would</em> lower G — the direction is sound. But:</p>
+        <p><strong>1. 89% of those pixels are <code>sim_only</code>.</strong> Reference C13 there is 280.9 K, sim C14 is only 3.6 K colder than the reference. ERA5 has put a 155 g/m² warm liquid deck over Florida that GOES doesn&#x27;t register as cold cloud at all. By this repo&#x27;s own rule (RESEARCH-LOOP #5, and the settled <code>sim_only</code> finding), that&#x27;s cloud-placement/amount error, not microphysics. Coarsening the droplets would dim a cloud that shouldn&#x27;t be that thick in the first place — cosmetically better, physically a wash.</p>
+        <p><strong>2. The genuinely wrong pixels are over ocean, already at 14 µm.</strong> The 46 <code>cloud_both</code> pixels have land=0.00, r_e=14, and the <em>worst</em> dG in the box (+4.76; reference G there is −1.52, a clean liquid signature, and the sim gives +3.2). A land→ocean fix does nothing for these. They corroborate the existing thread-L residual: 14 µm is the low edge of the [14, 23] zero-crossing bracket, truth nearer ~20.</p>
+        <p><strong>3. Scene-wide there is no land-vs-ocean signature at all.</strong> Warm liquid cloud over land (n=1282, r_e 8.2) has dG <strong>+0.88</strong>; over ocean (n=7225, r_e 14.0) dG <strong>+1.10</strong>. If the 8 µm continental value were systematically too fine, land should sit clearly <em>above</em> ocean. It doesn&#x27;t. The worst-behaved liquid stratum is the <em>partial</em> T-ramp (r_e 8–11 µm, n=719, T_liq 271 K, LWP 58): dG <strong>+2.45</strong> — supercooled continental cloud caught mid-ramp, not warm Florida cloud.</p>
+        <p><strong>One thing your reading does land on:</strong> our plugin deviates from CAM here, and it&#x27;s flagged in the docstring. CAM&#x27;s <code>landm</code> is a deliberately <em>smoothed</em> land fraction — the CAM authors put that smoothing in for exactly your reason (airmass ≠ underlying surface at coastlines). We use local <code>land_cov</code>, which is 1.00 across the Florida peninsula. Restoring the smoothing is a <strong>faithfulness fix, not a tune</strong>, and it targets your mechanism precisely. It would take those 218 land pixels from 8 µm to maybe 11. Small scene-wide, but principled.</p>
+        <h2>&quot;Use the clean radius everywhere&quot; — I&#x27;d argue against</h2>
+        <p><strong>The magnitude doesn&#x27;t support 14.</strong> The trend is real (eastern-US AOD is down roughly 40–50% since the early 2000s; SO₂ emissions far more), but r_e responds through two sublinear steps: N_d ∝ AOD^0.3–0.7, then r_e ∝ N_d^(−1/3). Even the linear-N_d upper bound gives r_e × ~1.22, i.e. <strong>8 → ~9.8 µm</strong>. A realistic exponent gives ~8.9. The pollution argument supports 8→9–10, not 8→14. <em>(Those AOD/emission figures are from memory — worth verifying before they go in the log.)</em></p>
+        <p><strong>The land–ocean r_e contrast isn&#x27;t purely anthropogenic.</strong> It survives in pristine continental air: stronger continental updrafts activate more of the CCN spectrum, and biogenic/dust/biomass CCN don&#x27;t clean up when SO₂ does. Kiehl&#x27;s 8/14 was never a &quot;polluted/clean&quot; pair — it&#x27;s a continental/maritime pair bundling CCN, updraft, and cloud-depth differences. Stripping the anthropogenic component doesn&#x27;t get you to maritime.</p>
+        <p><strong>It stops being CAM3.</strong> It becomes CONSTLIQ14 — an unpublished constant picked to fix a visual complaint, in a scheme whose whole selling point in the docstring is &quot;all constants are the published CAM values; nothing is fitted.&quot; And it&#x27;s already bracketed by the CONSTLIQ4/CONSTLIQ30 runs. Worth running as an ablation; not worth calling &quot;modernized CAM3.&quot;</p>
+        <p><strong>There&#x27;s counter-evidence in the error budget.</strong> CAM3LIQ already <em>overshoots</em> coarse where it was fine: cloud-over-snow dG flipped +0.29 → −0.48, independently corroborated at 3.9 µm (SW −0.50 → +1.15, night-valid). Pushing every continental cloud to 14 extends that overshoot to the ~1900 land liquid pixels currently sitting at a healthy +0.88.</p>
+        <h2>The bigger critique, which I think matters more</h2>
+        <p>CAM3&#x27;s LWC-independence is not a feature — it&#x27;s what makes the scheme physically indefensible as a parametrization. A droplet radius that ignores the water content is a radiation-code convenience tuned so CAM&#x27;s global shortwave cloud forcing balances, not a retrieval.</p>
+        <p>Which means the CAM3 win here is at least partly <strong>right answer, wrong reason</strong>: your own LOG says it works <em>because</em> it&#x27;s immune to ERA5&#x27;s low in-cloud LWC, after every (LWC/N_d)^⅓ scheme (Martin, MARTIN49, CAM6/MG2) landed within ±0.1 K of each other. That&#x27;s a scheme succeeding by ignoring a biased input. Stacking a further tune on top (&quot;clean everywhere&quot;) compounds the compensation — you&#x27;d be fitting a droplet radius to absorb an ERA5 liquid-water error, and the fit won&#x27;t transfer to another scene.</p>
+        <h2>What I&#x27;d do instead, ranked</h2>
+        <ol><li><strong>Restore CAM&#x27;s <code>landm</code> smoothing</strong> — faithfulness fix, free, targets your Florida mechanism honestly.</li><li><strong>Test 20 µm over ocean</strong>, if a published marine deck r_e supports it — that&#x27;s where the real <code>cloud_both</code> residual is (dG +4.76 at 14 µm), and thread L already says truth is between 14 and 30.</li><li><strong>Leave the Florida land green alone</strong> — it&#x27;s the ERA5 warm-low-cloud placement problem wearing a microphysics costume. Note also that the <em>reference</em> has G=+1.48 over Florida land at 281 K: that&#x27;s the quartz 8.5 µm emissivity dip in sandy soil, and our clear-land dG of −1.15 says IGBP under-represents it. Different error, same colour.</li></ol>
+        <p>Want me to run the <code>landm</code> smoothing variant, or write this up as an investigation entry in <code>LOG.md</code>?</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>Can you describe the landm smoothing variant</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Let me check what we actually verified about <code>landm</code> and what the pipeline gives us to smooth.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Confirmed the CAM source. Let me quantify what the variant would actually do before describing it.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <h2>What <code>landm</code> actually is</h2>
+        <p>Verified verbatim from the MPAS copy of CAM&#x27;s <code>reltab</code> (<code>module_ra_cam_support.F</code>, lines 2306–2364):</p>
+        <pre>real(r8), intent(in) :: landm(pcols)   ! Land fraction ramping to zero over ocean
+...
+! Ramp between polluted value over land to clean value over ocean.
+rel(i,k) = rel(i,k) + (rliqocean-rel(i,k)) * min(1.0_r8,max(0.0_r8,1.0-landm(i)))</pre>
+        <p>So <code>landm</code> is a <strong>separate field from <code>landfrac</code></strong> — both are passed into <code>reltab</code>, and only <code>landm</code> is used for the ramp (<code>landfrac</code> is unused in this subroutine; it&#x27;s a leftover argument). CESM documents it as a <em>&quot;land ocean transition mask: ocean (0), continent (1), transition (0–1)&quot;</em>, shipped as the <code>LANDM_COSLAT</code> variable on the CAM boundary-topography file (e.g. <code>USGS-gtopo30_1.9x2.5_remap_*.nc</code>), generated offline by the <code>definesurf</code>/NCL tool chain — <strong>the smoothing recipe is not in the model source; the field ships as data.</strong></p>
+        <p>Our plugin substitutes the pipeline&#x27;s local <code>land_cov</code>, which is 1.00 across the entire Florida peninsula. That is the deviation.</p>
+        <p><em>(Side note from the same source: we also omit CAM&#x27;s fourth ramp, <code>icefrac</code> → <code>rliqice</code>. Since <code>rliqice = rliqocean = 14</code>, and sea-ice points already have <code>land_cov = 0</code> so the ocean ramp reaches 14 first, it&#x27;s a genuine no-op. Fine to leave out.)</em></p>
+        <h2>Two ways to build it</h2>
+        <p><strong>(a) Use CAM&#x27;s actual field — no free knobs.</strong> Pull <code>LANDM_COSLAT</code> off a public CAM bnd_topo file from the CESM inputdata server and interpolate to our profile lat/lons. This is the disciplined option: it&#x27;s the same data CAM&#x27;s 8/14 constants were tuned against, and it invents nothing. Cost: one external dataset, and a resolution mismatch — the field is T42/1.9°×2.5°, we run ~16 km.</p>
+        <p><strong>(b) Smooth <code>land_cov</code> ourselves.</strong> Cheap, self-contained, but introduces exactly the free parameter this repo tries to avoid: the smoothing length. I probed it anyway to size the effect.</p>
+        <h2>What the probe says (read-only, no run)</h2>
+        <p>Great-circle Gaussian on <code>land_cov</code>, applied to the CAM3LIQ run&#x27;s 89,727 profiles:</p>
+        <table><tr><th>σ</th><th>Florida land <code>land_cov</code> → <code>landm</code></th><th>Florida liquid r_e</th><th>scene liquid layers coarsened / fined</th><th>mean Δr_e</th></tr><tr><td>150 km</td><td>1.00 → 0.47</td><td>8.0 → <strong>11.4 µm</strong></td><td>16.5% / 22.9%</td><td>+0.04 µm</td></tr><tr><td>300 km</td><td>1.00 → 0.29</td><td>8.0 → <strong>12.5 µm</strong></td><td>17.4% / 33.7%</td><td>+0.08 µm</td></tr></table>
+        <p>It does hit Florida hard and correctly — 8 → 11.4–12.5 µm, which is very close to the 9–10 µm the aerosol-trend argument supports and to the ~11 µm MODIS land climatology, arrived at without tuning anything.</p>
+        <p><em>(Caveat: the probe can&#x27;t reproduce the snow ramp — <code>snow_swe</code> isn&#x27;t stored in <code>crtm_input.nc</code>. Over snow-covered Quebec the snow ramp has already pushed r_e toward 14, so the smoothing will move those pixels less than the table implies. Florida has zero snow, so the Florida rows are exact.)</em></p>
+        <h2>The catch, and it&#x27;s a real one</h2>
+        <p><strong>The smoothing is two-sided.</strong> <code>landm</code> is nonzero over near-shore ocean, so it <em>fines</em> coastal marine droplets below 14 — 23–34% of liquid layers in this scene move in that direction, more than are coarsened. The scene-mean Δr_e is essentially zero (+0.04 µm); this is a redistribution, not a shift.</p>
+        <p>That&#x27;s the wrong direction for our worst pixels. The 46 <code>cloud_both</code> green offenders in the Florida box are <strong>offshore, already at 14 µm, dG +4.76</strong> — they need <em>coarser</em>, and faithful <code>landm</code> smoothing would make them finer. Thread L&#x27;s standing conclusion is the same: 14 is the low edge of the [14, 23] zero-crossing bracket.</p>
+        <p>The other surprise: at σ=300 km, median <code>landm</code> over interior-land pixels in this scene is only <strong>0.74</strong> — eastern North America is coastal enough that the smoothing shifts continental cloud from 8 to ~9.6 µm essentially everywhere. That&#x27;s a scene-wide change, not a Florida patch.</p>
+        <h2>My read</h2>
+        <p>It&#x27;s a legitimate faithfulness fix and it&#x27;s cheap, but I&#x27;d expect it to be <strong>roughly neutral on the metrics</strong> — it fixes the land side of a population that is 89% <code>sim_only</code> (a cloud GOES doesn&#x27;t see) while degrading the ocean side of the population that&#x27;s actually in <code>cloud_both</code>. If you run it, run variant (a) with the real <code>LANDM_COSLAT</code>, so the result is a statement about CAM rather than about a smoothing length I picked.</p>
+        <p>Ranked against the alternative: testing a coarser marine value (~20 µm) targets the genuine <code>cloud_both</code> residual directly, and would need a published source to stay within the no-free-knobs rule.</p>
+        <p>Want me to fetch <code>LANDM_COSLAT</code> and wire variant (a), or write the Florida investigation up in <code>LOG.md</code> first?</p>
+        <p>Sources: <a href="https://www2.cesm.ucar.edu/models/cesm1.2/cesm/cesmBbrowser/html_code/cam/pkg_cldoptics.F90.html" target="_blank" rel="noopener">CESM pkg_cldoptics.F90 browser</a>, <a href="https://www.cesm.ucar.edu/models/paleo/cesm1_2_0/bnd_topo.html" target="_blank" rel="noopener">CESM1.2 bnd_topo / definesurf docs</a>, <a href="https://www2.cesm.ucar.edu/models/paleo/faq/" target="_blank" rel="noopener">CESM PaleoResources FAQ</a></p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge user">User</span>
+      </div>
+      <div class="turn-body user">
+        <p>Add the florida investigation to the log</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <div class="turn-header">
+        <span class="role-badge assistant">Claude</span>
+      </div>
+      <div class="turn-body assistant">
+        <p>Added to <code>science-log/LOG.md</code>:</p>
+        <ul><li><strong>Index row</strong> at line 111 (<code>2026-07-22 | invest</code>), immediately after the post-CAM3LIQ error-budget row.</li><li><strong>Body entry</strong> appended at the end: <em>&quot;Investigation — the Florida green: is it CAM3&#x27;s land/ocean CCN split, and should &#x27;clean&#x27; be used everywhere?&quot;</em> — 113 lines, <code>invest</code> kind, read-only, no new runs.</li></ul>
+        <p>It records: the method (box → cloud-state gate <em>before</em> reading microphysics), the 89%-<code>sim_only</code> split, the offshore-at-14 µm genuine offenders, the scene-wide liquid strata table showing no land/ocean G signature, the reference&#x27;s own quartz-dip green over Florida, the three grounds for rejecting &quot;clean everywhere&quot;, the re-verified <code>reltab</code> source (including that <code>landfrac</code> is an unused argument and our omitted <code>icefrac</code> ramp is a no-op), and the <code>landm</code> probe table with its two-sidedness.</p>
+        <p>Two things I flagged inline rather than asserted:</p>
+        <ul><li>The AOD/emission trend figures are <strong>marked as from memory and not yet sourced</strong> — they need a citation before they go anywhere near the report.</li><li>The <code>landm</code> probe <strong>omits the snow ramp</strong> (<code>snow_swe</code> isn&#x27;t stored in <code>crtm_input.nc</code>), so its land-side numbers overstate the effect over snow-covered land; the Florida rows are exact since snow is zero there.</li></ul>
+        <p>Uncommitted. Note <code>crtm-experiments</code> was already showing modified at session start (the unpinned <code>7498915</code> seam work) — I didn&#x27;t touch it, so don&#x27;t let a <code>git add -A</code> sweep it into a re-pin.</p>
+        <p>Want me to commit just the LOG change, and add a line to thread L in <code>STATUS.md</code>?</p>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
