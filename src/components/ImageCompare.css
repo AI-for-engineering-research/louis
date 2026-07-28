@@ -8,3 +8,16 @@
   gap: 10px 24px;
   padding-bottom: 1.5vh;
 }
+
+/* The slider is an inline-block custom element, so it shrink-wraps to the
+   image's natural width and would sit at the column's start edge whenever the
+   image is narrower than the column (full-disk PNGs are 1119px; the column is
+   64vw and grows with viewport width / browser zoom). Make it a centred block
+   that never overflows. */
+.img-compare .slider-container {
+  display: block;
+  width: -moz-fit-content;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+}
